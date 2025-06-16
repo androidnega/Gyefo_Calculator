@@ -5,7 +5,6 @@ import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/services/export_service.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
-import 'package:gyefo_clocking_app/screens/manager_calendar_screen.dart';
 import 'package:intl/intl.dart';
 
 class WorkerAttendanceDetailScreen extends StatefulWidget {
@@ -585,19 +584,18 @@ class _WorkerAttendanceDetailScreenState
                   ],
                 ),
               ),            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.calendar_month),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ManagerCalendarScreen(workerId: widget.workerId),
-                ),
-              );
-            },
-            tooltip: 'Calendar View',
-          ),
+          ),          // IconButton(
+          //   icon: const Icon(Icons.calendar_month),
+          //   onPressed: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (context) => ManagerCalendarScreen(workerId: widget.workerId),
+          //       ),
+          //     );
+          //   },
+          //   tooltip: 'Calendar View',
+          // ),
         ],
       ),body: Column(
         children: [

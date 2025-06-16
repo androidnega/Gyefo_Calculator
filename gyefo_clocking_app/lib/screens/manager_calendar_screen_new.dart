@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
-import 'package:gyefo_clocking_app/widgets/location_info_widget.dart';
 import 'package:intl/intl.dart';
 
 class ManagerCalendarScreen extends StatefulWidget {
@@ -383,7 +382,8 @@ class _ManagerCalendarScreenState extends State<ManagerCalendarScreen> {
                                         ],
                                       ],
                                     ),
-                                  );
+                                  ),
+                                );
                               },
                             ),
                     ),
@@ -393,7 +393,8 @@ class _ManagerCalendarScreenState extends State<ManagerCalendarScreen> {
             ],
           ),
         ),
-      );
+      ),
+    );
   }
 
   Widget _buildTimeInfo({
