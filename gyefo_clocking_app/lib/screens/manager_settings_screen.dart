@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
+import 'package:gyefo_clocking_app/screens/work_location_setup_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ManagerSettingsScreen extends StatelessWidget {
@@ -360,6 +361,20 @@ class ManagerSettingsScreen extends StatelessWidget {
                   subtitle: const Text('App version and information'),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () => _showAbout(context),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.location_on, color: Colors.red),
+                  title: const Text('Work Location Setup'),
+                  subtitle: const Text('Set up and manage work locations'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const WorkLocationSetupScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

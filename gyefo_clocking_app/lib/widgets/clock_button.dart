@@ -127,33 +127,12 @@ class _ClockButtonState extends State<ClockButton> {
       );
     }
   }
-
   void _showErrorMessage(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
           backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-  }
-
-  void _showHolidayMessage() {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.celebration, color: Colors.white),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text('Today is a holiday. Clock-in is disabled.'),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.orange,
           duration: const Duration(seconds: 4),
         ),
       );
