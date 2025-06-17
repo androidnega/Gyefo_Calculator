@@ -20,7 +20,7 @@ class MonthlySummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final monthName = DateFormat('MMMM yyyy').format(month);
-    
+
     return Card(
       elevation: 3,
       color: Colors.indigo.shade50,
@@ -54,9 +54,10 @@ class MonthlySummaryCard extends StatelessWidget {
                     icon: Icons.event_available,
                     title: 'Days Worked',
                     value: '$totalDaysWorked',
-                    subtitle: totalRecords > totalDaysWorked 
-                        ? '$totalRecords total entries' 
-                        : null,
+                    subtitle:
+                        totalRecords > totalDaysWorked
+                            ? '$totalRecords total entries'
+                            : null,
                     color: Colors.green,
                   ),
                 ),
@@ -79,9 +80,10 @@ class MonthlySummaryCard extends StatelessWidget {
                   child: _buildStatCard(
                     icon: Icons.trending_up,
                     title: 'Avg Hours/Day',
-                    value: averageHoursPerDay > 0 
-                        ? averageHoursPerDay.toStringAsFixed(1)
-                        : '0.0',
+                    value:
+                        averageHoursPerDay > 0
+                            ? averageHoursPerDay.toStringAsFixed(1)
+                            : '0.0',
                     subtitle: 'per working day',
                     color: Colors.orange,
                   ),
@@ -134,6 +136,7 @@ class MonthlySummaryCard extends StatelessWidget {
       ),
     );
   }
+
   Widget _buildStatCard({
     required IconData icon,
     required String title,
@@ -175,10 +178,7 @@ class MonthlySummaryCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(
-                fontSize: 9,
-                color: Colors.grey.shade500,
-              ),
+              style: TextStyle(fontSize: 9, color: Colors.grey.shade500),
               textAlign: TextAlign.center,
             ),
           ],
@@ -190,22 +190,23 @@ class MonthlySummaryCard extends StatelessWidget {
   int _getWorkingDaysInMonth() {
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     int workingDays = 0;
-    
+
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(month.year, month.month, day);
       // Monday = 1, Sunday = 7
-      if (date.weekday <= 5) { // Monday to Friday
+      if (date.weekday <= 5) {
+        // Monday to Friday
         workingDays++;
       }
     }
-    
+
     return workingDays;
   }
 
   String _getInsightText() {
     final workingDays = _getWorkingDaysInMonth();
     final attendanceRate = (totalDaysWorked / workingDays * 100);
-    
+
     if (attendanceRate >= 90) {
       return 'Excellent attendance! ${attendanceRate.toStringAsFixed(0)}% of working days.';
     } else if (attendanceRate >= 75) {

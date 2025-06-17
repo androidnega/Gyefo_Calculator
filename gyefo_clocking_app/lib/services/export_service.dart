@@ -63,7 +63,8 @@ class ExportService {
     List<AttendanceModel>? records,
     UserModel? workerInfo,
   }) async {
-    try {      AppLogger.info('Starting CSV export for worker: $workerId');
+    try {
+      AppLogger.info('Starting CSV export for worker: $workerId');
 
       // Request storage permission for Android (not on web)
       if (_isAndroid) {
@@ -130,7 +131,7 @@ class ExportService {
       // Convert to CSV string
       final csvData = const ListToCsvConverter().convert(
         rows,
-      );      // Get the appropriate directory for saving files
+      ); // Get the appropriate directory for saving files
       Directory? directory;
       if (kIsWeb) {
         // For web, we'll use direct download instead of file system
@@ -264,7 +265,7 @@ class ExportService {
       }
 
       // Convert to CSV
-      final csvData = const ListToCsvConverter().convert(rows);      // Save file
+      final csvData = const ListToCsvConverter().convert(rows); // Save file
       Directory? directory;
       if (_isAndroid) {
         directory = await getExternalStorageDirectory();
@@ -311,7 +312,9 @@ class ExportService {
     UserModel? workerInfo,
   }) async {
     try {
-      AppLogger.info('Starting PDF export for worker: $workerId');      // Request storage permission for Android (not on web)
+      AppLogger.info(
+        'Starting PDF export for worker: $workerId',
+      ); // Request storage permission for Android (not on web)
       if (_isAndroid) {
         final status = await Permission.storage.request();
         if (!status.isGranted) {

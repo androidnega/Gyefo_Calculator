@@ -46,19 +46,20 @@ class ManagerDashboard extends StatelessWidget {
     // In a real app, you might want to show a list of workers to select from
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Worker'),
-        content: const Text(
-          'In a complete implementation, you would select a worker to view their calendar. '
-          'For now, please use the individual worker attendance screens.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Select Worker'),
+            content: const Text(
+              'In a complete implementation, you would select a worker to view their calendar. '
+              'For now, please use the individual worker attendance screens.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -68,6 +69,7 @@ class ManagerDashboard extends StatelessWidget {
       MaterialPageRoute(builder: (context) => const ManagerSettingsScreen()),
     );
   }
+
   void _navigateToHolidays(BuildContext context) {
     Navigator.push(
       context,
@@ -229,7 +231,11 @@ class ManagerDashboard extends StatelessWidget {
                       padding: EdgeInsets.all(16.0),
                       child: Row(
                         children: [
-                          Icon(Icons.calendar_month, color: Colors.purple, size: 28),
+                          Icon(
+                            Icons.calendar_month,
+                            color: Colors.purple,
+                            size: 28,
+                          ),
                           SizedBox(width: 16),
                           Expanded(
                             child: Column(

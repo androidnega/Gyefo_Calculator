@@ -5,9 +5,9 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:gyefo_clocking_app/utils/logger.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  
+  static final FlutterLocalNotificationsPlugin
+  _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
   static bool _isInitialized = false;
 
   /// Initialize the notification service
@@ -19,22 +19,22 @@ class NotificationService {
     try {
       // Initialize timezone data
       tz.initializeTimeZones();
-      
+
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
       const DarwinInitializationSettings initializationSettingsIOS =
           DarwinInitializationSettings(
-        requestSoundPermission: true,
-        requestBadgePermission: true,
-        requestAlertPermission: true,
-      );
+            requestSoundPermission: true,
+            requestBadgePermission: true,
+            requestAlertPermission: true,
+          );
 
       const InitializationSettings initializationSettings =
           InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS,
-      );
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS,
+          );
 
       await _flutterLocalNotificationsPlugin.initialize(
         initializationSettings,
@@ -59,11 +59,13 @@ class NotificationService {
     if (kIsWeb) return false;
 
     try {
-      final result = await _flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
-      
+      final result =
+          await _flutterLocalNotificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.requestNotificationsPermission();
+
       AppLogger.info('Notification permission result: $result');
       return result ?? false;
     } catch (e) {
@@ -114,7 +116,8 @@ class NotificationService {
       // If the scheduled time has passed today, schedule for tomorrow
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }      await _flutterLocalNotificationsPlugin.zonedSchedule(
+      }
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
         1, // Clock-in reminder ID
         'Time to Clock In! ⏰',
         customMessage ?? 'Don\'t forget to start your workday by clocking in.',
@@ -127,7 +130,9 @@ class NotificationService {
         payload: 'clock_in_reminder',
       );
 
-      AppLogger.info('Clock-in reminder scheduled for ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}');
+      AppLogger.info(
+        'Clock-in reminder scheduled for ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+      );
     } catch (e) {
       AppLogger.error('Error scheduling clock-in reminder: $e');
     }
@@ -175,7 +180,8 @@ class NotificationService {
       // If the scheduled time has passed today, schedule for tomorrow
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 1));
-      }      await _flutterLocalNotificationsPlugin.zonedSchedule(
+      }
+      await _flutterLocalNotificationsPlugin.zonedSchedule(
         2, // Clock-out reminder ID
         'Time to Clock Out! 🏠',
         customMessage ?? 'Remember to clock out before ending your workday.',
@@ -188,7 +194,9 @@ class NotificationService {
         payload: 'clock_out_reminder',
       );
 
-      AppLogger.info('Clock-out reminder scheduled for ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}');
+      AppLogger.info(
+        'Clock-out reminder scheduled for ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+      );
     } catch (e) {
       AppLogger.error('Error scheduling clock-out reminder: $e');
     }
@@ -219,11 +227,13 @@ class NotificationService {
   }
 
   /// Get list of pending notifications
-  static Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+  static Future<List<PendingNotificationRequest>>
+  getPendingNotifications() async {
     if (kIsWeb || !_isInitialized) return [];
 
     try {
-      return await _flutterLocalNotificationsPlugin.pendingNotificationRequests();
+      return await _flutterLocalNotificationsPlugin
+          .pendingNotificationRequests();
     } catch (e) {
       AppLogger.error('Error getting pending notifications: $e');
       return [];

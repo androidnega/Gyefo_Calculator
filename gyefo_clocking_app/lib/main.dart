@@ -11,10 +11,11 @@ import 'package:gyefo_clocking_app/services/notification_service.dart';
 void main() async {
   // Make main asynchronous
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase first
   await Firebase.initializeApp(
-    // Initialize Firebase
-    options: const FirebaseOptions(
-      apiKey: "AIzaSyCFcsbWvFcJtXV7YAvptYRMovPGoLR2MX4",
+    options: FirebaseOptions(
+      apiKey: "AIzaSyCsgwd4NSd61zW5O09sRK0N_hySDQn9LfI", // Updated to match Google Maps key
       authDomain: "gyefo-clocks.firebaseapp.com",
       projectId: "gyefo-clocks",
       storageBucket: "gyefo-clocks.firebasestorage.app",

@@ -45,5 +45,14 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to location for clocking validation.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to location for clocking validation.</string>
+	<key>io.flutter.embedded_views_preview</key>
+	<true/>
+	<!-- Add Google Maps API Key -->
+	<key>com.google.android.geo.API_KEY</key>
+	<string>AIzaSyCsgwd4NSd61zW5O09sRK0N_hySDQn9LfI</string>
 </dict>
 </plist>

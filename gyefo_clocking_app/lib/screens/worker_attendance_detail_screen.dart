@@ -295,6 +295,7 @@ class _WorkerAttendanceDetailScreenState
           ),
     );
   }
+
   void _showPDFExportSuccessDialog(File file) {
     showDialog(
       context: context,
@@ -393,6 +394,7 @@ class _WorkerAttendanceDetailScreenState
 
     return attendanceQuery;
   }
+
   @override
   Widget build(BuildContext context) {
     final attendanceQuery = _buildAttendanceQuery();
@@ -527,24 +529,30 @@ class _WorkerAttendanceDetailScreenState
                     ),
                   ),
                 ],
-          ),          if (_filterType != 'all')
+          ),
+          if (_filterType != 'all')
             IconButton(
               icon: const Icon(Icons.clear),
               onPressed: _clearFilters,
               tooltip: 'Clear filters',
-            ),          PopupMenuButton<String>(
+            ),
+          PopupMenuButton<String>(
             icon: const Icon(Icons.download),
             tooltip: 'Export options',
             enabled: !_isExporting,
             onSelected: (value) async {
               // Get current filtered records using the helper method
-              final QuerySnapshot snapshot = await _buildAttendanceQuery().get();
-              final records = snapshot.docs
-                  .map((doc) => AttendanceModel.fromMap(
-                        doc.data() as Map<String, dynamic>,
-                      ))
-                  .toList();
-              
+              final QuerySnapshot snapshot =
+                  await _buildAttendanceQuery().get();
+              final records =
+                  snapshot.docs
+                      .map(
+                        (doc) => AttendanceModel.fromMap(
+                          doc.data() as Map<String, dynamic>,
+                        ),
+                      )
+                      .toList();
+
               if (value == 'csv') {
                 await _exportToCSV(records);
               } else if (value == 'pdf') {
@@ -553,38 +561,40 @@ class _WorkerAttendanceDetailScreenState
                 await _previewPDF(records);
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'csv',
-                child: Row(
-                  children: [
-                    Icon(Icons.file_download),
-                    SizedBox(width: 8),
-                    Text('Export to CSV'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'pdf',
-                child: Row(
-                  children: [
-                    Icon(Icons.picture_as_pdf),
-                    SizedBox(width: 8),
-                    Text('Export to PDF'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'preview',
-                child: Row(
-                  children: [
-                    Icon(Icons.preview),
-                    SizedBox(width: 8),
-                    Text('Preview PDF'),
-                  ],
-                ),
-              ),            ],
-          ),          // IconButton(
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: 'csv',
+                    child: Row(
+                      children: [
+                        Icon(Icons.file_download),
+                        SizedBox(width: 8),
+                        Text('Export to CSV'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'pdf',
+                    child: Row(
+                      children: [
+                        Icon(Icons.picture_as_pdf),
+                        SizedBox(width: 8),
+                        Text('Export to PDF'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'preview',
+                    child: Row(
+                      children: [
+                        Icon(Icons.preview),
+                        SizedBox(width: 8),
+                        Text('Preview PDF'),
+                      ],
+                    ),
+                  ),
+                ],
+          ), // IconButton(
           //   icon: const Icon(Icons.calendar_month),
           //   onPressed: () {
           //     Navigator.push(
@@ -597,7 +607,8 @@ class _WorkerAttendanceDetailScreenState
           //   tooltip: 'Calendar View',
           // ),
         ],
-      ),body: Column(
+      ),
+      body: Column(
         children: [
           // Date filter section
           if (_filterType != 'all')

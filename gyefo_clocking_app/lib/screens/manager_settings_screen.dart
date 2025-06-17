@@ -12,42 +12,42 @@ class ManagerSettingsScreen extends StatelessWidget {
       // Show confirmation dialog
       final shouldLogout = await showDialog<bool>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.logout, color: Colors.orange),
-              SizedBox(width: 8),
-              Text('Confirm Logout'),
-            ],
-          ),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+        builder:
+            (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.logout, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text('Confirm Logout'),
+                ],
               ),
-              child: const Text('Logout'),
+              content: const Text('Are you sure you want to logout?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Logout'),
+                ),
+              ],
             ),
-          ],
-        ),
       );
 
       if (shouldLogout == true) {
         await FirebaseAuth.instance.signOut();
         AppLogger.info('Manager logged out successfully');
-        
+
         if (context.mounted) {
           // Navigate to login and clear the stack
-          Navigator.of(context).pushNamedAndRemoveUntil(
-            '/login',
-            (route) => false,
-          );
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil('/login', (route) => false);
         }
       }
     } catch (e) {
@@ -66,157 +66,160 @@ class ManagerSettingsScreen extends StatelessWidget {
   void _showHelp(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.help_outline, color: Colors.blue),
-            SizedBox(width: 8),
-            Text('Help & Support'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Need assistance with the Gyefo Clocking App?',
-              style: TextStyle(fontWeight: FontWeight.w500),
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.help_outline, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Help & Support'),
+              ],
             ),
-            const SizedBox(height: 16),
-            
-            _buildContactInfo(
-              icon: Icons.email,
-              label: 'Email Support',
-              value: 'support@gyefo.com',
-              onTap: () => _launchEmail('support@gyefo.com'),
-            ),
-            const SizedBox(height: 12),
-            
-            _buildContactInfo(
-              icon: Icons.phone,
-              label: 'Phone Support',
-              value: '0500000000',
-              onTap: () => _launchPhone('0500000000'),
-            ),
-            const SizedBox(height: 16),
-            
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Need assistance with the Gyefo Clocking App?',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 16),
+
+                _buildContactInfo(
+                  icon: Icons.email,
+                  label: 'Email Support',
+                  value: 'support@gyefo.com',
+                  onTap: () => _launchEmail('support@gyefo.com'),
+                ),
+                const SizedBox(height: 12),
+
+                _buildContactInfo(
+                  icon: Icons.phone,
+                  label: 'Phone Support',
+                  value: '0500000000',
+                  onTap: () => _launchPhone('0500000000'),
+                ),
+                const SizedBox(height: 16),
+
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.access_time, size: 16, color: Colors.blue.shade700),
-                      const SizedBox(width: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            size: 16,
+                            color: Colors.blue.shade700,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Support Hours',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       Text(
-                        'Support Hours',
+                        'Monday - Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 2:00 PM',
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          color: Colors.blue.shade800,
+                          fontSize: 12,
+                          color: Colors.blue.shade700,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Monday - Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 2:00 PM',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue.shade700,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   void _showAbout(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.green),
-            SizedBox(width: 8),
-            Text('About Gyefo Clocking App'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Gyefo Clocking App',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.green),
+                SizedBox(width: 8),
+                Text('About Gyefo Clocking App'),
+              ],
             ),
-            const SizedBox(height: 8),
-            const Text('Version 1.0.0'),
-            const SizedBox(height: 16),
-            const Text(
-              'A comprehensive attendance management system designed to help businesses track and manage employee working hours efficiently.',
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Features:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w500,
-                      color: Colors.green.shade800,
-                    ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Gyefo Clocking App',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text('Version 1.0.0'),
+                const SizedBox(height: 16),
+                const Text(
+                  'A comprehensive attendance management system designed to help businesses track and manage employee working hours efficiently.',
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '• Real-time clock in/out tracking\n'
-                    '• Comprehensive reporting\n'
-                    '• Calendar view of attendance\n'
-                    '• Export functionality (CSV/PDF)\n'
-                    '• Smart notifications\n'
-                    '• Manager dashboard with analytics',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green.shade700,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Features:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '• Real-time clock in/out tracking\n'
+                        '• Comprehensive reporting\n'
+                        '• Calendar view of attendance\n'
+                        '• Export functionality (CSV/PDF)\n'
+                        '• Smart notifications\n'
+                        '• Manager dashboard with analytics',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Close'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -240,10 +243,7 @@ class ManagerSettingsScreen extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 Text(
                   value,
@@ -268,7 +268,7 @@ class ManagerSettingsScreen extends StatelessWidget {
       path: email,
       query: 'subject=Gyefo Clocking App Support',
     );
-    
+
     if (await canLaunchUrl(emailUri)) {
       await launchUrl(emailUri);
     }
@@ -276,7 +276,7 @@ class ManagerSettingsScreen extends StatelessWidget {
 
   Future<void> _launchPhone(String phone) async {
     final Uri phoneUri = Uri(scheme: 'tel', path: phone);
-    
+
     if (await canLaunchUrl(phoneUri)) {
       await launchUrl(phoneUri);
     }
@@ -285,12 +285,9 @@ class ManagerSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Settings'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Settings'), elevation: 0),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -305,10 +302,7 @@ class ManagerSettingsScreen extends StatelessWidget {
                     children: [
                       CircleAvatar(
                         backgroundColor: Colors.blue.shade100,
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.blue.shade700,
-                        ),
+                        child: Icon(Icons.person, color: Colors.blue.shade700),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -402,9 +396,9 @@ class ManagerSettingsScreen extends StatelessWidget {
               onTap: () => _logout(context),
             ),
           ),
-          
+
           const SizedBox(height: 32),
-          
+
           // Footer
           Center(
             child: Column(
@@ -420,10 +414,7 @@ class ManagerSettingsScreen extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Version 1.0.0',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey.shade400,
-                  ),
+                  style: TextStyle(fontSize: 10, color: Colors.grey.shade400),
                 ),
               ],
             ),

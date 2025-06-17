@@ -16,22 +16,23 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
   void _saveHoliday() async {
     if (_nameController.text.isNotEmpty && _selectedDate != null) {
       setState(() => _isLoading = true);
-      
+
       try {
         await FirebaseFirestore.instance.collection('holidays').add({
           'name': _nameController.text.trim(),
           'date': Timestamp.fromDate(_selectedDate!),
-        });      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Holiday added successfully!')),
-        );
-        Navigator.pop(context, true); // Return true to indicate success
-      }
-      } catch (e) {
+        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error adding holiday: $e')),
+            const SnackBar(content: Text('Holiday added successfully!')),
           );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error adding holiday: $e')));
         }
       } finally {
         if (mounted) {
@@ -101,13 +102,14 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
             const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: _isLoading ? null : _saveHoliday,
-              icon: _isLoading 
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save),
+              icon:
+                  _isLoading
+                      ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(Icons.save),
               label: Text(_isLoading ? 'Saving...' : 'Save Holiday'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue,
@@ -134,8 +136,12 @@ class _AddHolidayScreenState extends State<AddHolidayScreen> {
                     ),
                     SizedBox(height: 8),
                     Text('• Holidays will be highlighted in the calendar view'),
-                    Text('• Workers may be prevented from clocking in on holidays'),
-                    Text('• All team members will see the holiday in their calendar'),
+                    Text(
+                      '• Workers may be prevented from clocking in on holidays',
+                    ),
+                    Text(
+                      '• All team members will see the holiday in their calendar',
+                    ),
                   ],
                 ),
               ),

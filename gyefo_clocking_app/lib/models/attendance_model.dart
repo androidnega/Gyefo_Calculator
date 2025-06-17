@@ -76,15 +76,18 @@ class AttendanceModel {
     return AttendanceModel(
       workerId: map['workerId'] as String,
       clockIn: DateTime.parse(map['clockIn'] as String),
-      clockOut: map['clockOut'] != null
-          ? DateTime.parse(map['clockOut'] as String)
-          : null,
-      clockInLocation: map['clockInLocation'] != null
-          ? AttendanceLocation.fromMap(map['clockInLocation'])
-          : null,
-      clockOutLocation: map['clockOutLocation'] != null
-          ? AttendanceLocation.fromMap(map['clockOutLocation'])
-          : null,
+      clockOut:
+          map['clockOut'] != null
+              ? DateTime.parse(map['clockOut'] as String)
+              : null,
+      clockInLocation:
+          map['clockInLocation'] != null
+              ? AttendanceLocation.fromMap(map['clockInLocation'])
+              : null,
+      clockOutLocation:
+          map['clockOutLocation'] != null
+              ? AttendanceLocation.fromMap(map['clockOutLocation'])
+              : null,
     );
   }
 

@@ -3,6 +3,10 @@
         android:label="gyefo_clocking_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Add Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCsgwd4NSd61zW5O09sRK0N_hySDQn9LfI"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

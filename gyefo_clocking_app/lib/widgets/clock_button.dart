@@ -6,7 +6,7 @@ import 'package:gyefo_clocking_app/services/location_service.dart';
 
 class ClockButton extends StatefulWidget {
   final VoidCallback? onClockStatusChanged;
-  
+
   const ClockButton({super.key, this.onClockStatusChanged});
 
   @override
@@ -39,6 +39,7 @@ class _ClockButtonState extends State<ClockButton> {
       }
     }
   }
+
   Future<void> _handleClockAction() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -59,25 +60,34 @@ class _ClockButtonState extends State<ClockButton> {
 
     try {
       // Validate location before proceeding
-      final locationResult = await LocationService.validateWorkLocation(user.uid);
-      
+      final locationResult = await LocationService.validateWorkLocation(
+        user.uid,
+      );
+
       if (!locationResult.isValid) {
         setState(() {
           _isLoading = false;
         });
-        
+
         // Show location validation error with option to proceed anyway
         await _showLocationValidationDialog(locationResult);
         return;
-      }      if (_isClockedIn) {
-        await _attendanceService.clockOut(user.uid, locationData: locationResult.locationData);
+      }
+      if (_isClockedIn) {
+        await _attendanceService.clockOut(
+          user.uid,
+          locationData: locationResult.locationData,
+        );
         _showSuccessMessage('Clocked out successfully!');
         setState(() {
           _isClockedIn = false;
         });
         widget.onClockStatusChanged?.call();
       } else {
-        await _attendanceService.clockIn(user.uid, locationData: locationResult.locationData);
+        await _attendanceService.clockIn(
+          user.uid,
+          locationData: locationResult.locationData,
+        );
         _showSuccessMessage('Clocked in successfully!');
         setState(() {
           _isClockedIn = true;
@@ -103,11 +113,12 @@ class _ClockButtonState extends State<ClockButton> {
     try {
       final today = DateTime.now();
       final normalizedToday = DateTime(today.year, today.month, today.day);
-      
-      final snapshot = await FirebaseFirestore.instance
-          .collection('holidays')
-          .where('date', isEqualTo: Timestamp.fromDate(normalizedToday))
-          .get();
+
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('holidays')
+              .where('date', isEqualTo: Timestamp.fromDate(normalizedToday))
+              .get();
 
       return snapshot.docs.isNotEmpty;
     } catch (e) {
@@ -127,6 +138,7 @@ class _ClockButtonState extends State<ClockButton> {
       );
     }
   }
+
   void _showErrorMessage(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -139,7 +151,9 @@ class _ClockButtonState extends State<ClockButton> {
     }
   }
 
-  Future<void> _showLocationValidationDialog(LocationValidationResult result) async {
+  Future<void> _showLocationValidationDialog(
+    LocationValidationResult result,
+  ) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -147,10 +161,7 @@ class _ClockButtonState extends State<ClockButton> {
         return AlertDialog(
           title: Row(
             children: [
-              Icon(
-                Icons.location_off,
-                color: Colors.orange,
-              ),
+              Icon(Icons.location_off, color: Colors.orange),
               const SizedBox(width: 8),
               const Text('Location Verification'),
             ],
@@ -164,18 +175,13 @@ class _ClockButtonState extends State<ClockButton> {
               if (result.distance != null) ...[
                 Text(
                   'Distance from workplace: ${result.formattedDistance}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 14),
                 ),
                 const SizedBox(height: 8),
               ],
               const Text(
                 'Would you like to proceed anyway? This will be flagged in the system.',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w500),
               ),
             ],
           ),
@@ -202,7 +208,10 @@ class _ClockButtonState extends State<ClockButton> {
       },
     );
   }
-  Future<void> _proceedWithFlaggedLocation(LocationValidationResult result) async {
+
+  Future<void> _proceedWithFlaggedLocation(
+    LocationValidationResult result,
+  ) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -212,14 +221,20 @@ class _ClockButtonState extends State<ClockButton> {
 
     try {
       if (_isClockedIn) {
-        await _attendanceService.clockOut(user.uid, locationData: result.locationData);
+        await _attendanceService.clockOut(
+          user.uid,
+          locationData: result.locationData,
+        );
         _showSuccessMessage('Clocked out successfully! (Location flagged)');
         setState(() {
           _isClockedIn = false;
         });
         widget.onClockStatusChanged?.call();
       } else {
-        await _attendanceService.clockIn(user.uid, locationData: result.locationData);
+        await _attendanceService.clockIn(
+          user.uid,
+          locationData: result.locationData,
+        );
         _showSuccessMessage('Clocked in successfully! (Location flagged)');
         setState(() {
           _isClockedIn = true;
@@ -234,6 +249,7 @@ class _ClockButtonState extends State<ClockButton> {
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Card(

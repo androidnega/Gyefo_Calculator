@@ -7,15 +7,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 class WorkLocationSetupScreen extends StatefulWidget {
   final String? userId; // If null, sets company-wide location
   final String? userName;
-  
-  const WorkLocationSetupScreen({
-    super.key,
-    this.userId,
-    this.userName,
-  });
+
+  const WorkLocationSetupScreen({super.key, this.userId, this.userName});
 
   @override
-  State<WorkLocationSetupScreen> createState() => _WorkLocationSetupScreenState();
+  State<WorkLocationSetupScreen> createState() =>
+      _WorkLocationSetupScreenState();
 }
 
 class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
@@ -40,9 +37,10 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
     });
 
     try {
-      String userId = widget.userId ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+      String userId =
+          widget.userId ?? FirebaseAuth.instance.currentUser?.uid ?? '';
       _currentWorkLocation = await LocationService.getWorkLocation(userId);
-      
+
       if (_currentWorkLocation != null) {
         _selectedLocation = LatLng(
           _currentWorkLocation!['latitude'],
@@ -53,9 +51,9 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading location: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading location: $e')));
       }
     } finally {
       setState(() {
@@ -107,9 +105,10 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
         markerId: const MarkerId('work_location'),
         position: _selectedLocation!,
         infoWindow: InfoWindow(
-          title: widget.userId != null 
-              ? '${widget.userName ?? "Worker"} Workplace'
-              : 'Company Workplace',
+          title:
+              widget.userId != null
+                  ? '${widget.userName ?? "Worker"} Workplace'
+                  : 'Company Workplace',
           snippet: 'Radius: ${_radiusMeters.round()}m',
         ),
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
@@ -188,10 +187,7 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
   void _showError(String message) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
   }
@@ -201,7 +197,7 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.userId != null 
+          widget.userId != null
               ? 'Set Worker Location'
               : 'Set Company Location',
         ),
@@ -215,112 +211,121 @@ class _WorkLocationSetupScreenState extends State<WorkLocationSetupScreen> {
             ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Info Panel
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  color: Colors.blue[50],
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.userId != null 
-                            ? 'Set workplace location for ${widget.userName ?? "worker"}'
-                            : 'Set company-wide workplace location',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  // Info Panel
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    color: Colors.blue[50],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.userId != null
+                              ? 'Set workplace location for ${widget.userName ?? "worker"}'
+                              : 'Set company-wide workplace location',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Tap on the map to set the workplace location. Workers will be required to clock in/out within the specified radius.',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 16),
-                      
-                      // Radius Slider
-                      Text(
-                        'Allowed Radius: ${_radiusMeters.round()}m',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      Slider(
-                        value: _radiusMeters,
-                        min: 50.0,
-                        max: 500.0,
-                        divisions: 18,
-                        label: '${_radiusMeters.round()}m',
-                        onChanged: (value) {
-                          setState(() {
-                            _radiusMeters = value;
-                          });
-                          _updateMapMarkers();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Map
-                Expanded(
-                  child: GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _selectedLocation ?? const LatLng(5.6037, -0.1870), // Default to Accra
-                      zoom: 16.0,
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Tap on the map to set the workplace location. Workers will be required to clock in/out within the specified radius.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Radius Slider
+                        Text(
+                          'Allowed Radius: ${_radiusMeters.round()}m',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        Slider(
+                          value: _radiusMeters,
+                          min: 50.0,
+                          max: 500.0,
+                          divisions: 18,
+                          label: '${_radiusMeters.round()}m',
+                          onChanged: (value) {
+                            setState(() {
+                              _radiusMeters = value;
+                            });
+                            _updateMapMarkers();
+                          },
+                        ),
+                      ],
                     ),
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                      if (_selectedLocation != null) {
-                        controller.animateCamera(
-                          CameraUpdate.newLatLngZoom(_selectedLocation!, 16.0),
-                        );
-                      }
-                    },
-                    onTap: _onMapTap,
-                    markers: _markers,
-                    circles: _circles,
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: false,
                   ),
-                ),
-                
-                // Bottom Actions
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _getCurrentLocation,
-                          icon: const Icon(Icons.my_location),
-                          label: const Text('Use Current Location'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
+
+                  // Map
+                  Expanded(
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target:
+                            _selectedLocation ??
+                            const LatLng(5.6037, -0.1870), // Default to Accra
+                        zoom: 16.0,
+                      ),
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                        if (_selectedLocation != null) {
+                          controller.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+                              _selectedLocation!,
+                              16.0,
+                            ),
+                          );
+                        }
+                      },
+                      onTap: _onMapTap,
+                      markers: _markers,
+                      circles: _circles,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                    ),
+                  ),
+
+                  // Bottom Actions
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _getCurrentLocation,
+                            icon: const Icon(Icons.my_location),
+                            label: const Text('Use Current Location'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: _selectedLocation == null || _isLoading ? null : _saveLocation,
-                          icon: const Icon(Icons.save),
-                          label: const Text('Save Location'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue[700],
-                            foregroundColor: Colors.white,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                _selectedLocation == null || _isLoading
+                                    ? null
+                                    : _saveLocation,
+                            icon: const Icon(Icons.save),
+                            label: const Text('Save Location'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue[700],
+                              foregroundColor: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
     );
   }
 }

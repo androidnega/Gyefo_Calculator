@@ -46,12 +46,12 @@ dependencies:
   fl_chart: ^0.66.2  # Notifications
   flutter_local_notifications: ^17.2.3
   timezone: ^0.9.2  # Calendar
-  table_calendar: ^3.0.9
-  # URL Launcher
-  url_launcher: ^6.2.4
-  # Location and Maps
-  geolocator: ^10.1.0
-  google_maps_flutter: ^2.5.2
+  table_calendar: ^3.0.9  # URL Launcher and Maps
+  url_launcher: ^6.2.5
+  # Maps and Location
+  google_maps_flutter: ^2.5.3
+  google_maps_flutter_web: ^0.5.4+3
+  geolocator: ^11.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

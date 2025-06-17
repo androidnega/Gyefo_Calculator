@@ -25,26 +25,27 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
     try {
       final now = DateTime.now();
       final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      
+
       List<double> weeklyHours = List.filled(7, 0.0);
-      
+
       for (int i = 0; i < 7; i++) {
         final date = startOfWeek.add(Duration(days: i));
         final dateString = DateFormat('yyyy-MM-dd').format(date);
-        
-        final snapshot = await FirebaseFirestore.instance
-            .collection('attendance')
-            .doc(workerId)
-            .collection('records')
-            .where('date', isEqualTo: dateString)
-            .get();
-        
+
+        final snapshot =
+            await FirebaseFirestore.instance
+                .collection('attendance')
+                .doc(workerId)
+                .collection('records')
+                .where('date', isEqualTo: dateString)
+                .get();
+
         double dayHours = 0.0;
         for (var doc in snapshot.docs) {
           final data = doc.data();
           final clockIn = DateTime.parse(data['clockIn']);
           final clockOutString = data['clockOut'];
-          
+
           if (clockOutString != null) {
             final clockOut = DateTime.parse(clockOutString);
             final duration = clockOut.difference(clockIn);
@@ -53,10 +54,12 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
         }
         weeklyHours[i] = dayHours;
       }
-      
+
       return weeklyHours;
     } catch (e) {
-      AppLogger.error('Error calculating weekly hours for worker $workerId: $e');
+      AppLogger.error(
+        'Error calculating weekly hours for worker $workerId: $e',
+      );
       return List.filled(7, 0.0);
     }
   }
@@ -67,47 +70,51 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
       final endOfMonth = DateTime(now.year, now.month + 1, 0);
-      
+
       final startDateString = DateFormat('yyyy-MM-dd').format(startOfMonth);
       final endDateString = DateFormat('yyyy-MM-dd').format(endOfMonth);
-      
-      final snapshot = await FirebaseFirestore.instance
-          .collection('attendance')
-          .doc(workerId)
-          .collection('records')
-          .where('date', isGreaterThanOrEqualTo: startDateString)
-          .where('date', isLessThanOrEqualTo: endDateString)
-          .get();
-      
+
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('attendance')
+              .doc(workerId)
+              .collection('records')
+              .where('date', isGreaterThanOrEqualTo: startDateString)
+              .where('date', isLessThanOrEqualTo: endDateString)
+              .get();
+
       double totalHours = 0.0;
       Set<String> workedDays = {};
       int totalRecords = 0;
-      
+
       for (var doc in snapshot.docs) {
         final data = doc.data();
         final date = data['date'];
         final clockIn = DateTime.parse(data['clockIn']);
         final clockOutString = data['clockOut'];
-        
+
         totalRecords++;
         workedDays.add(date);
-        
+
         if (clockOutString != null) {
           final clockOut = DateTime.parse(clockOutString);
           final duration = clockOut.difference(clockIn);
           totalHours += duration.inMinutes / 60.0;
         }
       }
-      
+
       return {
         'totalDaysWorked': workedDays.length,
         'totalHours': totalHours,
         'totalRecords': totalRecords,
-        'averageHoursPerDay': workedDays.isNotEmpty ? totalHours / workedDays.length : 0.0,
+        'averageHoursPerDay':
+            workedDays.isNotEmpty ? totalHours / workedDays.length : 0.0,
         'month': startOfMonth,
       };
     } catch (e) {
-      AppLogger.error('Error calculating monthly summary for worker $workerId: $e');
+      AppLogger.error(
+        'Error calculating monthly summary for worker $workerId: $e',
+      );
       return {
         'totalDaysWorked': 0,
         'totalHours': 0.0,
@@ -318,7 +325,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   itemCount: workers.length,
                   separatorBuilder:
-                      (context, index) => const Divider(height: 1),                  itemBuilder: (context, index) {
+                      (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
                     final workerData =
                         workers[index].data() as Map<String, dynamic>;
                     final worker = UserModel.fromMap(
@@ -333,14 +341,16 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                         children: [
                           // Worker Header
                           InkWell(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => WorkerAttendanceDetailScreen(
-                                  workerId: worker.uid,
+                            onTap:
+                                () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (_) => WorkerAttendanceDetailScreen(
+                                          workerId: worker.uid,
+                                        ),
+                                  ),
                                 ),
-                              ),
-                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
                               child: Row(
@@ -358,7 +368,8 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           worker.name,
@@ -389,14 +400,19 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                               ),
                             ),
                           ),
-                          
+
                           // Weekly Chart
                           FutureBuilder<List<double>>(
                             future: _calculateWeeklyHours(worker.uid),
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    8,
+                                  ),
                                   child: AttendanceChart(
                                     weeklyHours: snapshot.data!,
                                     title: 'This Week\'s Hours',
@@ -412,7 +428,7 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                               );
                             },
                           ),
-                          
+
                           // Monthly Summary
                           FutureBuilder<Map<String, dynamic>>(
                             future: _calculateMonthlySummary(worker.uid),
@@ -420,12 +436,18 @@ class _ManagerAttendanceScreenState extends State<ManagerAttendanceScreen> {
                               if (snapshot.hasData) {
                                 final data = snapshot.data!;
                                 return Padding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    16,
+                                  ),
                                   child: MonthlySummaryCard(
                                     totalDaysWorked: data['totalDaysWorked'],
                                     totalHours: data['totalHours'],
                                     totalRecords: data['totalRecords'],
-                                    averageHoursPerDay: data['averageHoursPerDay'],
+                                    averageHoursPerDay:
+                                        data['averageHoursPerDay'],
                                     month: data['month'],
                                   ),
                                 );

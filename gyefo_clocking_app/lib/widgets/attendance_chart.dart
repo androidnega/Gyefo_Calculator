@@ -22,9 +22,9 @@ class AttendanceChart extends StatelessWidget {
           children: [
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -56,7 +56,15 @@ class AttendanceChart extends StatelessWidget {
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
                       getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                        const days = [
+                          'Mon',
+                          'Tue',
+                          'Wed',
+                          'Thu',
+                          'Fri',
+                          'Sat',
+                          'Sun',
+                        ];
                         return BarTooltipItem(
                           '${days[group.x]}\n${rod.toY.toStringAsFixed(1)} hrs',
                           const TextStyle(
@@ -95,8 +103,17 @@ class AttendanceChart extends StatelessWidget {
                         showTitles: true,
                         reservedSize: 30,
                         getTitlesWidget: (value, meta) {
-                          const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                          if (value.toInt() >= 0 && value.toInt() < days.length) {
+                          const days = [
+                            'Mon',
+                            'Tue',
+                            'Wed',
+                            'Thu',
+                            'Fri',
+                            'Sat',
+                            'Sun',
+                          ];
+                          if (value.toInt() >= 0 &&
+                              value.toInt() < days.length) {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
@@ -148,7 +165,10 @@ class AttendanceChart extends StatelessWidget {
   }
 
   double _getMaxY() {
-    final maxHours = weeklyHours.isNotEmpty ? weeklyHours.reduce((a, b) => a > b ? a : b) : 8;
+    final maxHours =
+        weeklyHours.isNotEmpty
+            ? weeklyHours.reduce((a, b) => a > b ? a : b)
+            : 8;
     return (maxHours + 2).ceilToDouble(); // Add some padding
   }
 
@@ -188,10 +208,7 @@ class AttendanceChart extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
         ),
       ],
     );

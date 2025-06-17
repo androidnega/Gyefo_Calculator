@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
+import 'package:gyefo_clocking_app/services/location_service.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceService {
@@ -43,7 +44,11 @@ class AttendanceService {
       return false; // Return false instead of throwing to prevent app crashes
     }
   }
-  Future<void> clockIn(String workerId, {Map<String, dynamic>? locationData}) async {
+
+  Future<void> clockIn(
+    String workerId, {
+    Map<String, dynamic>? locationData,
+  }) async {
     try {
       final alreadyClockedIn = await hasClockedInToday(workerId);
       if (alreadyClockedIn) {
@@ -51,7 +56,7 @@ class AttendanceService {
       }
 
       final now = DateTime.now();
-      
+
       // Create location object if data is provided
       AttendanceLocation? clockInLocation;
       if (locationData != null) {
@@ -64,9 +69,9 @@ class AttendanceService {
           distanceFromWork: locationData['distanceFromWork'],
         );
       }
-      
+
       final newRecord = AttendanceModel(
-        workerId: workerId, 
+        workerId: workerId,
         clockIn: now,
         clockInLocation: clockInLocation,
       );
@@ -74,7 +79,9 @@ class AttendanceService {
       if (kDebugMode) {
         print('Creating clock-in record for worker: $workerId');
         if (clockInLocation != null) {
-          print('Location: ${clockInLocation.latitude}, ${clockInLocation.longitude}');
+          print(
+            'Location: ${clockInLocation.latitude}, ${clockInLocation.longitude}',
+          );
           print('Within work zone: ${clockInLocation.isWithinWorkZone}');
         }
       }
@@ -97,7 +104,11 @@ class AttendanceService {
       rethrow;
     }
   }
-  Future<void> clockOut(String workerId, {Map<String, dynamic>? locationData}) async {
+
+  Future<void> clockOut(
+    String workerId, {
+    Map<String, dynamic>? locationData,
+  }) async {
     try {
       final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
@@ -126,12 +137,12 @@ class AttendanceService {
 
       final doc = snapshot.docs.first;
       final clockOutTime = DateTime.now();
-      
+
       // Prepare update data
       Map<String, dynamic> updateData = {
         'clockOut': clockOutTime.toIso8601String(),
       };
-      
+
       // Add clock-out location if provided
       if (locationData != null) {
         final clockOutLocation = AttendanceLocation(
@@ -142,11 +153,13 @@ class AttendanceService {
           isWithinWorkZone: locationData['isWithinWorkZone'] ?? false,
           distanceFromWork: locationData['distanceFromWork'],
         );
-        
+
         updateData['clockOutLocation'] = clockOutLocation.toMap();
-        
+
         if (kDebugMode) {
-          print('Clock-out location: ${clockOutLocation.latitude}, ${clockOutLocation.longitude}');
+          print(
+            'Clock-out location: ${clockOutLocation.latitude}, ${clockOutLocation.longitude}',
+          );
           print('Within work zone: ${clockOutLocation.isWithinWorkZone}');
         }
       }
@@ -307,4 +320,267 @@ class AttendanceService {
       toDate: lastDayOfWeek,
     );
   }
+
+  /// Enhanced clock-in with zone validation
+  Future<ClockResult> clockInWithZoneValidation(String workerId) async {
+    try {
+      final alreadyClockedIn = await hasClockedInToday(workerId);
+      if (alreadyClockedIn) {
+        return ClockResult(
+          success: false,
+          message: 'Already clocked in today',
+          requiresManagerOverride: false,
+        );
+      }
+
+      // Perform zone validation
+      final zoneValidation = await LocationService.validateZoneLocation();
+
+      if (kDebugMode) {
+        print('Zone validation result for $workerId:');
+        print('  - Within zone: ${zoneValidation.isWithinZone}');
+        print('  - Message: ${zoneValidation.message}');
+        if (zoneValidation.distance != null) {
+          print('  - Distance: ${zoneValidation.formattedDistance}');
+        }
+      }
+
+      final now = DateTime.now();
+
+      // Create location object from zone validation
+      AttendanceLocation? clockInLocation;
+      if (zoneValidation.hasLocationData) {
+        clockInLocation = AttendanceLocation(
+          latitude: zoneValidation.currentPosition!.latitude,
+          longitude: zoneValidation.currentPosition!.longitude,
+          accuracy: zoneValidation.currentPosition!.accuracy,
+          timestamp: now,
+          isWithinWorkZone: zoneValidation.isWithinZone,
+          distanceFromWork: zoneValidation.distance,
+        );
+      }
+
+      final newRecord = AttendanceModel(
+        workerId: workerId,
+        clockIn: now,
+        clockInLocation: clockInLocation,
+      );
+
+      // Save the record regardless of zone validation
+      await _firestore
+          .collection('attendance')
+          .doc(workerId)
+          .collection('records')
+          .add(newRecord.toMap());
+
+      if (kDebugMode) {
+        print('Worker $workerId clocked in at ${now.toIso8601String()}');
+        if (clockInLocation != null) {
+          print(
+            'Location: ${clockInLocation.latitude}, ${clockInLocation.longitude}',
+          );
+          print('Within work zone: ${clockInLocation.isWithinWorkZone}');
+        }
+      }
+
+      // If not within zone, flag for manager review
+      if (!zoneValidation.isWithinZone && zoneValidation.distance != null) {
+        await _flagAttendanceForReview(
+          workerId: workerId,
+          reason: 'Clock-in outside work zone',
+          details: zoneValidation.message,
+          attendanceDate: DateFormat('yyyy-MM-dd').format(now),
+        );
+
+        return ClockResult(
+          success: true,
+          message: 'Clocked in successfully. ${zoneValidation.message}',
+          requiresManagerOverride: true,
+          locationValidation: zoneValidation,
+        );
+      }
+
+      return ClockResult(
+        success: true,
+        message: 'Clocked in successfully. ${zoneValidation.message}',
+        requiresManagerOverride: false,
+        locationValidation: zoneValidation,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clocking in for $workerId: $e');
+      }
+      return ClockResult(
+        success: false,
+        message: 'Error clocking in: $e',
+        requiresManagerOverride: false,
+      );
+    }
+  }
+
+  /// Enhanced clock-out with zone validation
+  Future<ClockResult> clockOutWithZoneValidation(String workerId) async {
+    try {
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+      // Check for active clock-in
+      final snapshot =
+          await _firestore
+              .collection('attendance')
+              .doc(workerId)
+              .collection('records')
+              .where('date', isEqualTo: today)
+              .where('clockOut', isNull: true)
+              .orderBy('clockIn', descending: true)
+              .limit(1)
+              .get();
+
+      if (snapshot.docs.isEmpty) {
+        return ClockResult(
+          success: false,
+          message: 'No active clock-in found for today',
+          requiresManagerOverride: false,
+        );
+      }
+
+      // Perform zone validation
+      final zoneValidation = await LocationService.validateZoneLocation();
+
+      if (kDebugMode) {
+        print('Zone validation for clock-out by $workerId:');
+        print('  - Within zone: ${zoneValidation.isWithinZone}');
+        print('  - Message: ${zoneValidation.message}');
+        if (zoneValidation.distance != null) {
+          print('  - Distance: ${zoneValidation.formattedDistance}');
+        }
+      }
+
+      final doc = snapshot.docs.first;
+      final clockOutTime = DateTime.now();
+
+      // Prepare update data
+      Map<String, dynamic> updateData = {
+        'clockOut': clockOutTime.toIso8601String(),
+      };
+
+      // Add clock-out location from zone validation
+      if (zoneValidation.hasLocationData) {
+        final clockOutLocation = AttendanceLocation(
+          latitude: zoneValidation.currentPosition!.latitude,
+          longitude: zoneValidation.currentPosition!.longitude,
+          accuracy: zoneValidation.currentPosition!.accuracy,
+          timestamp: clockOutTime,
+          isWithinWorkZone: zoneValidation.isWithinZone,
+          distanceFromWork: zoneValidation.distance,
+        );
+
+        updateData['clockOutLocation'] = clockOutLocation.toMap();
+
+        if (kDebugMode) {
+          print(
+            'Clock-out location: ${clockOutLocation.latitude}, ${clockOutLocation.longitude}',
+          );
+          print('Within work zone: ${clockOutLocation.isWithinWorkZone}');
+        }
+      }
+
+      await doc.reference.update(updateData);
+
+      if (kDebugMode) {
+        print(
+          'Worker $workerId clocked out at ${clockOutTime.toIso8601String()}',
+        );
+      }
+
+      // If not within zone, flag for manager review
+      if (!zoneValidation.isWithinZone && zoneValidation.distance != null) {
+        await _flagAttendanceForReview(
+          workerId: workerId,
+          reason: 'Clock-out outside work zone',
+          details: zoneValidation.message,
+          attendanceDate: today,
+        );
+
+        return ClockResult(
+          success: true,
+          message: 'Clocked out successfully. ${zoneValidation.message}',
+          requiresManagerOverride: true,
+          locationValidation: zoneValidation,
+        );
+      }
+
+      return ClockResult(
+        success: true,
+        message: 'Clocked out successfully. ${zoneValidation.message}',
+        requiresManagerOverride: false,
+        locationValidation: zoneValidation,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error clocking out for $workerId: $e');
+      }
+      return ClockResult(
+        success: false,
+        message: 'Error clocking out: $e',
+        requiresManagerOverride: false,
+      );
+    }
+  }
+
+  /// Flag attendance record for manager review
+  Future<void> _flagAttendanceForReview({
+    required String workerId,
+    required String reason,
+    required String details,
+    required String attendanceDate,
+  }) async {
+    try {
+      await _firestore.collection('flaggedAttendance').add({
+        'workerId': workerId,
+        'reason': reason,
+        'details': details,
+        'attendanceDate': attendanceDate,
+        'flaggedAt': Timestamp.now(),
+        'isResolved': false,
+        'reviewedBy': null,
+        'reviewNotes': null,
+      });
+
+      if (kDebugMode) {
+        print('Flagged attendance for review: $workerId - $reason');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error flagging attendance for review: $e');
+      }
+    }
+  }
+}
+
+/// Result class for clock-in/out operations with zone validation
+class ClockResult {
+  final bool success;
+  final String message;
+  final bool requiresManagerOverride;
+  final ZoneValidationResult? locationValidation;
+
+  ClockResult({
+    required this.success,
+    required this.message,
+    required this.requiresManagerOverride,
+    this.locationValidation,
+  });
+
+  /// Whether the operation was completed but flagged for review
+  bool get isFlagged => success && requiresManagerOverride;
+
+  /// Whether location validation passed
+  bool get isLocationValid => locationValidation?.isWithinZone ?? true;
+
+  /// Formatted distance from work zone
+  String get distanceFromZone => locationValidation?.formattedDistance ?? 'N/A';
+
+  /// Zone validation message
+  String get locationMessage =>
+      locationValidation?.message ?? 'Location validation not performed';
 }

@@ -19,22 +19,22 @@ class LocationInfoWidget extends StatelessWidget {
       return isCompact
           ? const Icon(Icons.location_off, size: 16, color: Colors.grey)
           : Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.location_off, size: 16, color: Colors.grey),
-                  SizedBox(width: 4),
-                  Text(
-                    'No location data',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  ),
-                ],
-              ),
-            );
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.location_off, size: 16, color: Colors.grey),
+                SizedBox(width: 4),
+                Text(
+                  'No location data',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ],
+            ),
+          );
     }
 
     final isWithinZone = location!.isWithinWorkZone;
@@ -43,12 +43,9 @@ class LocationInfoWidget extends StatelessWidget {
 
     if (isCompact) {
       return Tooltip(
-        message: '$label: ${isWithinZone ? "Within workplace" : "Outside workplace"}\nDistance: ${location!.formattedDistance}',
-        child: Icon(
-          statusIcon,
-          size: 16,
-          color: statusColor,
-        ),
+        message:
+            '$label: ${isWithinZone ? "Within workplace" : "Outside workplace"}\nDistance: ${location!.formattedDistance}',
+        child: Icon(statusIcon, size: 16, color: statusColor),
       );
     }
 
@@ -92,11 +89,20 @@ class LocationInfoWidget extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _buildLocationDetail('Status', isWithinZone ? 'Within workplace zone' : 'Outside workplace zone'),
+          _buildLocationDetail(
+            'Status',
+            isWithinZone ? 'Within workplace zone' : 'Outside workplace zone',
+          ),
           if (location!.distanceFromWork != null)
-            _buildLocationDetail('Distance from workplace', location!.formattedDistance),
+            _buildLocationDetail(
+              'Distance from workplace',
+              location!.formattedDistance,
+            ),
           _buildLocationDetail('Accuracy', '±${location!.accuracy.round()}m'),
-          _buildLocationDetail('Coordinates', '${location!.latitude.toStringAsFixed(6)}, ${location!.longitude.toStringAsFixed(6)}'),
+          _buildLocationDetail(
+            'Coordinates',
+            '${location!.latitude.toStringAsFixed(6)}, ${location!.longitude.toStringAsFixed(6)}',
+          ),
         ],
       ),
     );
@@ -112,19 +118,13 @@ class LocationInfoWidget extends StatelessWidget {
             width: 80,
             child: Text(
               '$label:',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -136,10 +136,7 @@ class LocationInfoWidget extends StatelessWidget {
 class LocationSummaryCard extends StatelessWidget {
   final List<AttendanceModel> attendanceRecords;
 
-  const LocationSummaryCard({
-    super.key,
-    required this.attendanceRecords,
-  });
+  const LocationSummaryCard({super.key, required this.attendanceRecords});
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +166,10 @@ class LocationSummaryCard extends StatelessWidget {
       }
     }
 
-    double flaggedPercentage = totalRecords > 0 ? ((flaggedClockIns + flaggedClockOuts) / totalRecords) * 100 : 0;
+    double flaggedPercentage =
+        totalRecords > 0
+            ? ((flaggedClockIns + flaggedClockOuts) / totalRecords) * 100
+            : 0;
 
     return Card(
       child: Padding(
@@ -183,15 +183,12 @@ class LocationSummaryCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 const Text(
                   'Location Analytics',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -228,7 +225,7 @@ class LocationSummaryCard extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             if (flaggedPercentage > 20) ...[
               const SizedBox(height: 16),
               Container(
@@ -261,7 +258,12 @@ class LocationSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color, IconData icon) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -276,10 +278,7 @@ class LocationSummaryCard extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 10,
-            color: Colors.grey,
-          ),
+          style: const TextStyle(fontSize: 10, color: Colors.grey),
           textAlign: TextAlign.center,
         ),
       ],

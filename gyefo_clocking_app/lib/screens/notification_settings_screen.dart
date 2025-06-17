@@ -6,10 +6,12 @@ class NotificationSettingsScreen extends StatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  State<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends State<NotificationSettingsScreen> {
   bool _clockInEnabled = false;
   bool _clockOutEnabled = false;
   TimeOfDay _clockInTime = const TimeOfDay(hour: 8, minute: 0);
@@ -29,6 +31,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       _clockOutEnabled = false;
     });
   }
+
   Future<void> _updateClockInReminder() async {
     if (_clockInEnabled) {
       await NotificationService.scheduleClockInReminder(
@@ -36,7 +39,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         minute: _clockInTime.minute,
       );
       if (mounted) {
-        AppLogger.info('Clock-in reminder enabled for ${_clockInTime.format(context)}');
+        AppLogger.info(
+          'Clock-in reminder enabled for ${_clockInTime.format(context)}',
+        );
       }
     } else {
       await NotificationService.cancelReminder(1); // Clock-in reminder ID
@@ -51,7 +56,9 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         minute: _clockOutTime.minute,
       );
       if (mounted) {
-        AppLogger.info('Clock-out reminder enabled for ${_clockOutTime.format(context)}');
+        AppLogger.info(
+          'Clock-out reminder enabled for ${_clockOutTime.format(context)}',
+        );
       }
     } else {
       await NotificationService.cancelReminder(2); // Clock-out reminder ID
@@ -103,10 +110,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notification Settings'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Notification Settings'), elevation: 0),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -119,19 +123,16 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 const SizedBox(width: 8),
                 Text(
                   'Daily Reminders',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               'Set up automatic reminders to help you remember to clock in and out.',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
             const SizedBox(height: 24),
 
@@ -153,8 +154,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Spacer(),                        Switch(
-                          value: _clockInEnabled,                          onChanged: (value) async {
+                        const Spacer(),
+                        Switch(
+                          value: _clockInEnabled,
+                          onChanged: (value) async {
                             final messenger = ScaffoldMessenger.of(context);
                             setState(() {
                               _clockInEnabled = value;
@@ -169,7 +172,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                                       ? 'Clock-in reminder enabled'
                                       : 'Clock-in reminder disabled',
                                 ),
-                                backgroundColor: value ? Colors.green : Colors.orange,
+                                backgroundColor:
+                                    value ? Colors.green : Colors.orange,
                               ),
                             );
                           },
@@ -210,8 +214,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Spacer(),                        Switch(
-                          value: _clockOutEnabled,                          onChanged: (value) async {
+                        const Spacer(),
+                        Switch(
+                          value: _clockOutEnabled,
+                          onChanged: (value) async {
                             final messenger = ScaffoldMessenger.of(context);
                             setState(() {
                               _clockOutEnabled = value;
@@ -226,7 +232,8 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                                         ? 'Clock-out reminder enabled'
                                         : 'Clock-out reminder disabled',
                                   ),
-                                  backgroundColor: value ? Colors.green : Colors.orange,
+                                  backgroundColor:
+                                      value ? Colors.green : Colors.orange,
                                 ),
                               );
                             }

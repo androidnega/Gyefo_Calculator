@@ -51,6 +51,7 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
       }
     });
   }
+
   void _stopLiveTimer() {
     _clockTimer?.cancel();
     setState(() {
@@ -60,11 +61,11 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
 
   String _formatWorkingDuration() {
     if (_workingDuration == Duration.zero) return '';
-    
+
     final hours = _workingDuration.inHours;
     final minutes = _workingDuration.inMinutes % 60;
     final seconds = _workingDuration.inSeconds % 60;
-    
+
     if (hours > 0) {
       return ' (${hours}h ${minutes}m ${seconds}s)';
     } else if (minutes > 0) {
@@ -87,7 +88,9 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
       _workerInfo = await ExportService.getWorkerInfo(user.uid);
 
       // Check if worker has an active session today
-      _hasActiveSession = await _attendanceService.hasClockedInToday(user.uid);      // Get today's record
+      _hasActiveSession = await _attendanceService.hasClockedInToday(
+        user.uid,
+      ); // Get today's record
       _todayRecord = await _attendanceService.getTodayActiveRecord(user.uid);
 
       // Set up live timer if clocked in
@@ -362,7 +365,8 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Worker Dashboard'),        actions: [
+        title: const Text('Worker Dashboard'),
+        actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshData,
@@ -375,12 +379,13 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
           ),
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const NotificationSettingsScreen(),
-              ),
-            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationSettingsScreen(),
+                  ),
+                ),
             tooltip: 'Notification Settings',
           ),
           IconButton(
@@ -530,7 +535,8 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                                               ? Colors.green
                                               : Colors.grey,
                                     ),
-                                    const SizedBox(width: 8),                                    Expanded(
+                                    const SizedBox(width: 8),
+                                    Expanded(
                                       child: Text(
                                         _hasActiveSession
                                             ? 'Currently clocked in - Working${_formatWorkingDuration()}'
@@ -575,9 +581,7 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              ClockButton(
-                              onClockStatusChanged: _refreshData,
-                            ),
+                              ClockButton(onClockStatusChanged: _refreshData),
                             ],
                           ),
                         ),
