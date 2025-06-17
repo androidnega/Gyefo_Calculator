@@ -106,6 +106,53 @@
 - Enhanced user data management
 - Better integration between services
 
+### 10. Time Tracking & Analytics System
+**Files Created:**
+- `lib/services/attendance_analytics_service.dart` - Core analytics engine
+- `lib/screens/flagged_attendance_screen.dart` - Manager review interface
+- `lib/screens/justification_submission_screen.dart` - Worker justification system
+- `TIME_TRACKING_ANALYTICS.md` - Comprehensive analytics documentation
+
+**Files Enhanced:**
+- `lib/models/attendance_model.dart` - Complete analytics integration
+- `lib/services/attendance_service.dart` - Smart clock-in/out with analytics
+
+**Features:**
+- **Intelligent Attendance Analysis**:
+  - Automatic lateness detection (with grace periods)
+  - Overtime calculation based on shift schedules
+  - Work duration validation and anomaly detection
+  - Location-based flagging (out-of-zone clocking)
+  - Real-time flag generation and audit trails
+
+- **Advanced Analytics Engine**:
+  - Week/month analytics summaries
+  - Team performance metrics
+  - Individual worker analytics
+  - Attendance rate and punctuality calculations
+  - Overtime cost tracking
+
+- **Manager Review System**:
+  - Flagged attendance dashboard with filters
+  - Justification approval/rejection workflow
+  - Manager comments and communication
+  - Priority-based issue sorting
+  - Team-specific analytics views
+
+- **Worker Justification Workflow**:
+  - Predefined reason categories
+  - Custom explanation submissions
+  - Status tracking (pending/approved/rejected)
+  - Communication with managers
+  - Complete audit trail
+
+- **Data-Driven Insights**:
+  - Real-time flagging system
+  - Historical trend analysis
+  - Performance benchmarking
+  - Cost control analytics
+  - Compliance reporting
+
 ## 🎯 ROLE-BASED FEATURE VISIBILITY
 
 ### Manager Features:
@@ -116,6 +163,7 @@
 ✅ **Attendance Oversight** - View all worker attendance
 ✅ **Holiday Management** - Manage company holidays
 ✅ **Settings Management** - App configuration
+✅ **Time Tracking & Analytics** - Attendance analysis and reporting
 
 ### Worker Features:
 ✅ **Personal Info Display** - Team and shift assignments
@@ -124,6 +172,7 @@
 ✅ **Export Personal Data** - CSV/PDF exports
 ✅ **Notification Settings** - Personal preferences
 ✅ **Team Information** - View assigned team details
+✅ **Justification Submission** - Attendance explanation submissions
 
 ## 🔧 TECHNICAL IMPLEMENTATION
 
@@ -169,6 +218,7 @@
 - Enhanced Worker Information Display
 - Manager Dashboard Integration
 - Role-based Feature Access
+- Time Tracking & Analytics System
 
 **⚠️ Mock Implementation (Needs Package Integration):**
 - Biometric Authentication (requires `local_auth` package)
@@ -186,11 +236,13 @@
 - Intuitive shift and team creation
 - Detailed analytics and insights
 - Easy worker management
+- Efficient attendance issue resolution
 
 ### Worker Experience:
 - Clear personal information display
 - Secure biometric authentication
 - Simple attendance tracking
 - Team visibility and engagement
+- Transparent justification submission
 
 The implementation provides a complete, production-ready attendance management system with advanced features for both managers and workers, following modern mobile app development best practices.

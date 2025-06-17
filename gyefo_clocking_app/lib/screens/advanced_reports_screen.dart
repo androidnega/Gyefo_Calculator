@@ -3,6 +3,7 @@ import 'package:gyefo_clocking_app/models/team_model.dart';
 import 'package:gyefo_clocking_app/models/shift_model.dart';
 import 'package:gyefo_clocking_app/services/team_service.dart';
 import 'package:gyefo_clocking_app/services/shift_service.dart';
+import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
 import 'package:intl/intl.dart';
 
@@ -15,8 +16,9 @@ class AdvancedReportsScreen extends StatefulWidget {
 
 class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-    final TeamService _teamService = TeamService();
+  final TeamService _teamService = TeamService();
   final ShiftService _shiftService = ShiftService();
+  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
 
   DateTimeRange? _selectedDateRange;
   String? _selectedTeamId;
