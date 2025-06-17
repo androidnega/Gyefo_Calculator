@@ -96,8 +96,8 @@ class ManagerSettingsScreen extends StatelessWidget {
                 _buildContactInfo(
                   icon: Icons.phone,
                   label: 'Phone Support',
-                  value: '0500000000',
-                  onTap: () => _launchPhone('0500000000'),
+                  value: '+233257940791',
+                  onTap: () => _launchPhone('+233257940791'),
                 ),
                 const SizedBox(height: 16),
 
@@ -130,7 +130,7 @@ class ManagerSettingsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Monday - Friday: 8:00 AM - 6:00 PM\nSaturday: 9:00 AM - 2:00 PM',
+                        'Monday - Friday: 7:30 AM - 5:00 PM',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.blue.shade700,

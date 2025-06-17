@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:async';
 import 'package:gyefo_clocking_app/widgets/clock_button.dart';
+import 'package:gyefo_clocking_app/widgets/worker_info_card.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
 import 'package:gyefo_clocking_app/services/export_service.dart';
@@ -406,6 +407,11 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Worker Info Card
+                      if (_workerInfo != null)
+                        WorkerInfoCard(worker: _workerInfo!),
+                      const SizedBox(height: 16),
+
                       // Welcome Card
                       Card(
                         elevation: 2,

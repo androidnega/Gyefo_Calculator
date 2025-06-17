@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart'; // Import foundation for kDebugMode
 import 'package:flutter/material.dart'; // Required for Dialogs
 import 'package:gyefo_clocking_app/services/firestore_service.dart'; // Import FirestoreService
+import 'package:gyefo_clocking_app/models/user_model.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -211,6 +212,20 @@ class AuthService {
     } catch (e) {
       if (kDebugMode) {
         print('Error signing up: ${e.toString()}');
+      }
+      return null;
+    }
+  }  /// Get worker details by ID
+  Future<UserModel?> getWorkerById(String workerId) async {
+    try {
+      final userData = await FirestoreService.getUserData(workerId);
+      if (userData != null) {
+        return UserModel.fromMap(userData, workerId);
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting worker by ID: $e');
       }
       return null;
     }

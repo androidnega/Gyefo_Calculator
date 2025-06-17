@@ -21,6 +21,22 @@ class FirestoreService {
     }
   }
 
+  static Future<Map<String, dynamic>?> getUserData(String uid) async {
+    try {
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(uid).get();
+      if (doc.exists) {
+        return doc.data() as Map<String, dynamic>?;
+      }
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting user data: $e');
+      }
+      return null;
+    }
+  }
+
   static Future<void> createUserDocument(
     String uid,
     String name,

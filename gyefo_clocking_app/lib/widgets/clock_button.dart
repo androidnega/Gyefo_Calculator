@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
 import 'package:gyefo_clocking_app/services/location_service.dart';
+import 'package:gyefo_clocking_app/services/biometric_service.dart';
+import 'package:gyefo_clocking_app/services/auth_service.dart';
 
 class ClockButton extends StatefulWidget {
   final VoidCallback? onClockStatusChanged;
@@ -39,12 +41,35 @@ class _ClockButtonState extends State<ClockButton> {
       }
     }
   }
-
   Future<void> _handleClockAction() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       _showErrorMessage('User not authenticated');
       return;
+    }
+
+    // Check if biometric authentication should be used
+    final shouldUseBiometric = await BiometricService.shouldUseBiometricForClocking();
+    if (shouldUseBiometric) {
+      // Get worker name for personalized biometric prompt
+      String? workerName;
+      try {
+        final worker = await AuthService().getWorkerById(user.uid);
+        workerName = worker?.name;
+      } catch (e) {
+        // Continue without name if we can't get it
+      }
+
+      // Perform biometric authentication
+      final authenticated = await BiometricService.authenticateForClocking(
+        isClockIn: !_isClockedIn,
+        workerName: workerName,
+      );
+
+      if (!authenticated) {
+        _showErrorMessage('Biometric authentication failed or was cancelled');
+        return;
+      }
     }
 
     // Check if today is a holiday

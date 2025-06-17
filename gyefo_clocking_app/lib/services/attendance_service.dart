@@ -1,11 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
+import 'package:gyefo_clocking_app/models/shift_model.dart';
+import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/services/location_service.dart';
+import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
+import 'package:gyefo_clocking_app/services/shift_service.dart';
+import 'package:gyefo_clocking_app/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
+  final ShiftService _shiftService = ShiftService();
 
   Future<bool> hasClockedInToday(String workerId) async {
     try {
@@ -43,9 +50,7 @@ class AttendanceService {
       }
       return false; // Return false instead of throwing to prevent app crashes
     }
-  }
-
-  Future<void> clockIn(
+  }  Future<void> clockIn(
     String workerId, {
     Map<String, dynamic>? locationData,
   }) async {
@@ -70,11 +75,40 @@ class AttendanceService {
         );
       }
 
-      final newRecord = AttendanceModel(
+      // Get user and shift data for analytics
+      UserModel? user;
+      ShiftModel? shift;
+      
+      try {
+        final userData = await FirestoreService.getUserData(workerId);
+        if (userData != null) {
+          user = UserModel.fromMap(userData, workerId);
+          if (user.shiftId != null) {
+            shift = await _shiftService.getShiftById(user.shiftId!);
+          }
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Could not load user/shift data for analytics: $e');
+        }
+      }
+
+      // Create initial attendance record
+      var newRecord = AttendanceModel(
         workerId: workerId,
         clockIn: now,
         clockInLocation: clockInLocation,
+        auditLog: ['${now.toIso8601String()}: Clock-in recorded'],
       );
+
+      // Calculate analytics if shift data is available
+      if (shift != null) {
+        newRecord = await _analyticsService.calculateAttendanceAnalytics(
+          attendance: newRecord,
+          shift: shift,
+          user: user,
+        );
+      }
 
       if (kDebugMode) {
         print('Creating clock-in record for worker: $workerId');
@@ -83,6 +117,9 @@ class AttendanceService {
             'Location: ${clockInLocation.latitude}, ${clockInLocation.longitude}',
           );
           print('Within work zone: ${clockInLocation.isWithinWorkZone}');
+        }
+        if (newRecord.flags.isNotEmpty) {
+          print('Flags detected: ${newRecord.flags.map((f) => f.toString().split('.').last).join(', ')}');
         }
       }
 
@@ -104,7 +141,6 @@ class AttendanceService {
       rethrow;
     }
   }
-
   Future<void> clockOut(
     String workerId, {
     Map<String, dynamic>? locationData,
@@ -133,19 +169,16 @@ class AttendanceService {
           print('No active clock-in found for worker $workerId on $today');
         }
         throw Exception('No active clock-in found for today');
-      }
-
-      final doc = snapshot.docs.first;
+      }      final doc = snapshot.docs.first;
       final clockOutTime = DateTime.now();
 
-      // Prepare update data
-      Map<String, dynamic> updateData = {
-        'clockOut': clockOutTime.toIso8601String(),
-      };
+      // Get current attendance record
+      var currentRecord = AttendanceModel.fromMap(doc.data());
 
-      // Add clock-out location if provided
+      // Create clock-out location if provided
+      AttendanceLocation? clockOutLocation;
       if (locationData != null) {
-        final clockOutLocation = AttendanceLocation(
+        clockOutLocation = AttendanceLocation(
           latitude: locationData['latitude'] ?? 0.0,
           longitude: locationData['longitude'] ?? 0.0,
           accuracy: locationData['accuracy'] ?? 0.0,
@@ -153,8 +186,6 @@ class AttendanceService {
           isWithinWorkZone: locationData['isWithinWorkZone'] ?? false,
           distanceFromWork: locationData['distanceFromWork'],
         );
-
-        updateData['clockOutLocation'] = clockOutLocation.toMap();
 
         if (kDebugMode) {
           print(
@@ -164,7 +195,55 @@ class AttendanceService {
         }
       }
 
-      await doc.reference.update(updateData);
+      // Update record with clock-out time and location
+      List<String> auditLog = List.from(currentRecord.auditLog);
+      auditLog.add('${clockOutTime.toIso8601String()}: Clock-out recorded');
+
+      var updatedRecord = currentRecord.copyWith(
+        clockOut: clockOutTime,
+        clockOutLocation: clockOutLocation,
+        updatedAt: clockOutTime,
+        auditLog: auditLog,
+      );
+
+      // Recalculate analytics with clock-out data
+      try {
+        UserModel? user;
+        ShiftModel? shift;
+        
+        final userData = await FirestoreService.getUserData(workerId);
+        if (userData != null) {
+          user = UserModel.fromMap(userData, workerId);
+          if (user.shiftId != null) {
+            shift = await _shiftService.getShiftById(user.shiftId!);
+          }
+        }
+
+        if (shift != null) {
+          updatedRecord = await _analyticsService.calculateAttendanceAnalytics(
+            attendance: updatedRecord,
+            shift: shift,
+            user: user,
+          );
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('Could not recalculate analytics for clock-out: $e');
+        }
+      }
+
+      if (kDebugMode) {
+        print('Updating attendance record with clock-out data');
+        if (updatedRecord.flags.isNotEmpty) {
+          print('Final flags: ${updatedRecord.flags.map((f) => f.toString().split('.').last).join(', ')}');
+        }
+        if (updatedRecord.actualDuration != null) {
+          print('Work duration: ${updatedRecord.workDurationFormatted}');
+        }
+      }
+
+      // Update the document with all new data
+      await doc.reference.update(updatedRecord.toMap());
 
       if (kDebugMode) {
         print(

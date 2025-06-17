@@ -4,6 +4,10 @@ import 'package:gyefo_clocking_app/screens/manager_create_worker_screen.dart';
 import 'package:gyefo_clocking_app/screens/manager_attendance_screen.dart';
 import 'package:gyefo_clocking_app/screens/manager_settings_screen.dart';
 import 'package:gyefo_clocking_app/screens/holiday_list_screen.dart';
+import 'package:gyefo_clocking_app/screens/shift_management_screen.dart';
+import 'package:gyefo_clocking_app/screens/team_management_screen.dart';
+import 'package:gyefo_clocking_app/screens/advanced_reports_screen.dart';
+import 'package:gyefo_clocking_app/screens/flagged_attendance_screen.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 
 class ManagerDashboard extends StatelessWidget {
@@ -74,6 +78,42 @@ class ManagerDashboard extends StatelessWidget {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const HolidayListScreen()),
+    );
+  }
+
+  void _navigateToShiftManagement(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ShiftManagementScreen(),
+      ),
+    );
+  }
+
+  void _navigateToTeamManagement(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TeamManagementScreen(),
+      ),
+    );
+  }
+
+  void _navigateToAdvancedReports(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdvancedReportsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToFlaggedAttendance(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FlaggedAttendanceScreen(),
+      ),
     );
   }
 
@@ -258,6 +298,44 @@ class ManagerDashboard extends StatelessWidget {
                                 ),
                               ],
                             ),
+                          ),                          Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 1,
+                  child: InkWell(
+                    onTap: () => _navigateToFlaggedAttendance(context),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.flag, color: Colors.red, size: 28),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Flagged Attendance',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Review attendance requiring justification',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                           Icon(Icons.arrow_forward_ios, size: 16),
                         ],
@@ -329,6 +407,123 @@ class ManagerDashboard extends StatelessWidget {
                                 SizedBox(height: 4),
                                 Text(
                                   'Add and manage company holidays',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 1,
+                  child: InkWell(
+                    onTap: () => _navigateToShiftManagement(context),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.schedule, color: Colors.purple, size: 28),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Shift Management',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Create and manage work shifts',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 1,
+                  child: InkWell(
+                    onTap: () => _navigateToTeamManagement(context),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.groups, color: Colors.teal, size: 28),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Team Management',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Organize employees into teams',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 1,
+                  child: InkWell(
+                    onTap: () => _navigateToAdvancedReports(context),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.analytics, color: Colors.orange, size: 28),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Advanced Reports',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Detailed analytics and insights',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,
