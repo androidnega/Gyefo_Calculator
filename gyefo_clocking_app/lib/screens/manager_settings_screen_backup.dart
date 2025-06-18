@@ -88,8 +88,8 @@ class ManagerSettingsScreen extends StatelessWidget {
                 _buildContactInfo(
                   icon: Icons.email,
                   label: 'Email Support',
-                  value: 'support@gyefo.com',
-                  onTap: () => _launchEmail('support@gyefo.com'),
+                  value: 'support@manuelcode.info',
+                  onTap: () => _launchEmail('support@manuelcode.info'),
                 ),
                 const SizedBox(height: 12),
 

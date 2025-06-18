@@ -2,7 +2,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:gyefo_clocking_app/utils/logger.dart';
+import 'package:gyefo_clocking_app/services/navigation_service.dart';
 
 class FCMNotificationService {
   static final FirebaseMessaging _firebaseMessaging =
@@ -11,12 +14,11 @@ class FCMNotificationService {
       FlutterLocalNotificationsPlugin();
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
-
   // Notification types
-  static const String TYPE_CLOCK_SUCCESS = 'clock_success';
-  static const String TYPE_JUSTIFICATION_STATUS = 'justification_status';
-  static const String TYPE_FLAGGED_ATTENDANCE = 'flagged_attendance';
-  static const String TYPE_NEW_JUSTIFICATION = 'new_justification';
+  static const String typeClockSuccess = 'clock_success';
+  static const String typeJustificationStatus = 'justification_status';
+  static const String typeFlaggedAttendance = 'flagged_attendance';
+  static const String typeNewJustification = 'new_justification';
 
   static Future<void> initialize() async {
     // Request permission for notifications
@@ -31,9 +33,11 @@ class FCMNotificationService {
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      print('User granted permission for notifications');
+      AppLogger.info('User granted permission for notifications');
     } else {
-      print('User declined or has not accepted permission for notifications');
+      AppLogger.warning(
+        'User declined or has not accepted permission for notifications',
+      );
       return;
     }
 
@@ -88,10 +92,10 @@ class FCMNotificationService {
           'fcmToken': token,
           'lastTokenUpdate': FieldValue.serverTimestamp(),
         });
-        print('FCM token updated: $token');
+        AppLogger.info('FCM token updated: $token');
       }
     } catch (e) {
-      print('Error updating FCM token: $e');
+      AppLogger.error('Error updating FCM token: $e');
     }
 
     // Listen for token refresh
@@ -101,16 +105,16 @@ class FCMNotificationService {
           'fcmToken': newToken,
           'lastTokenUpdate': FieldValue.serverTimestamp(),
         });
-        print('FCM token refreshed: $newToken');
+        AppLogger.info('FCM token refreshed: $newToken');
       } catch (e) {
-        print('Error updating refreshed FCM token: $e');
+        AppLogger.error('Error updating refreshed FCM token: $e');
       }
     });
   }
 
   /// Handle foreground messages
   static Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    print('Received foreground message: ${message.messageId}');
+    AppLogger.info('Received foreground message: ${message.messageId}');
 
     // Show local notification when app is in foreground
     await _showLocalNotification(message);
@@ -153,9 +157,10 @@ class FCMNotificationService {
 
   /// Handle notification tap
   static void _handleNotificationTap(RemoteMessage message) {
-    print('Notification tapped: ${message.data}');
-    // TODO: Navigate to appropriate screen based on notification type
+    AppLogger.info('Notification tapped: ${message.data}');
     _processNotificationAction(message.data);
+    // Store navigation intent for the app to handle when it becomes active
+    _storeNavigationIntent(message.data);
   }
 
   /// Handle notification response from local notifications
@@ -165,7 +170,7 @@ class FCMNotificationService {
         final data = jsonDecode(response.payload!);
         _processNotificationAction(data);
       } catch (e) {
-        print('Error processing notification payload: $e');
+        AppLogger.error('Error processing notification payload: $e');
       }
     }
   }
@@ -175,27 +180,39 @@ class FCMNotificationService {
     final type = data['type'];
 
     switch (type) {
-      case TYPE_CLOCK_SUCCESS:
+      case typeClockSuccess:
         // Navigate to attendance history or dashboard
-        print('Processing clock success notification');
+        AppLogger.info(
+          'Processing clock success notification - should navigate to dashboard',
+        );
+        NavigationService.navigateFromNotification(data);
         break;
-      case TYPE_JUSTIFICATION_STATUS:
+      case typeJustificationStatus:
         // Navigate to justification details
         final justificationId = data['justificationId'];
-        print('Processing justification status notification: $justificationId');
+        AppLogger.info(
+          'Processing justification status notification - should navigate to justification details: $justificationId',
+        );
+        NavigationService.navigateFromNotification(data);
         break;
-      case TYPE_FLAGGED_ATTENDANCE:
+      case typeFlaggedAttendance:
         // Navigate to flagged attendance screen (managers only)
         final attendanceId = data['attendanceId'];
-        print('Processing flagged attendance notification: $attendanceId');
+        AppLogger.info(
+          'Processing flagged attendance notification - should navigate to flagged attendance screen: $attendanceId',
+        );
+        NavigationService.navigateFromNotification(data);
         break;
-      case TYPE_NEW_JUSTIFICATION:
+      case typeNewJustification:
         // Navigate to justification review (managers only)
         final justificationId = data['justificationId'];
-        print('Processing new justification notification: $justificationId');
+        AppLogger.info(
+          'Processing new justification notification - should navigate to justification review: $justificationId',
+        );
+        NavigationService.navigateFromNotification(data);
         break;
       default:
-        print('Unknown notification type: $type');
+        AppLogger.warning('Unknown notification type: $type');
     }
   }
 
@@ -210,23 +227,23 @@ class FCMNotificationService {
       final fcmToken = userData.data()?['fcmToken'];
 
       if (fcmToken == null) {
-        print('No FCM token found for user: $userId');
+        AppLogger.warning('No FCM token found for user: $userId');
         return;
       }
 
       final actionText = action == 'clock_in' ? 'Clock In' : 'Clock Out';
-      final timeText = _formatTime(timestamp);
-
-      // Create notification document for Firebase Functions to process
+      final timeText = _formatTime(
+        timestamp,
+      ); // Create notification document for Firebase Functions to process
       await _firestore.collection('notifications').add({
-        'type': TYPE_CLOCK_SUCCESS,
+        'type': typeClockSuccess,
         'userId': userId,
         'fcmToken': fcmToken,
         'title': '$actionText Successful',
         'body':
             'Successfully clocked ${action == 'clock_in' ? 'in' : 'out'} at $timeText',
         'data': {
-          'type': TYPE_CLOCK_SUCCESS,
+          'type': typeClockSuccess,
           'action': action,
           'timestamp': timestamp.toIso8601String(),
         },
@@ -234,9 +251,9 @@ class FCMNotificationService {
         'processed': false,
       });
 
-      print('Clock success notification queued for user: $userId');
+      AppLogger.info('Clock success notification queued for user: $userId');
     } catch (e) {
-      print('Error sending clock success notification: $e');
+      AppLogger.error('Error sending clock success notification: $e');
     }
   }
 
@@ -252,7 +269,7 @@ class FCMNotificationService {
       final fcmToken = userData.data()?['fcmToken'];
 
       if (fcmToken == null) {
-        print('No FCM token found for user: $userId');
+        AppLogger.warning('No FCM token found for user: $userId');
         return;
       }
 
@@ -261,15 +278,14 @@ class FCMNotificationService {
           managerNote != null
               ? 'Your justification has been $statusText. Note: $managerNote'
               : 'Your justification has been $statusText.';
-
       await _firestore.collection('notifications').add({
-        'type': TYPE_JUSTIFICATION_STATUS,
+        'type': typeJustificationStatus,
         'userId': userId,
         'fcmToken': fcmToken,
         'title': 'Justification $statusText',
         'body': bodyText,
         'data': {
-          'type': TYPE_JUSTIFICATION_STATUS,
+          'type': typeJustificationStatus,
           'justificationId': justificationId,
           'status': status,
           'managerNote': managerNote,
@@ -278,9 +294,11 @@ class FCMNotificationService {
         'processed': false,
       });
 
-      print('Justification status notification queued for user: $userId');
+      AppLogger.info(
+        'Justification status notification queued for user: $userId',
+      );
     } catch (e) {
-      print('Error sending justification status notification: $e');
+      AppLogger.error('Error sending justification status notification: $e');
     }
   }
 
@@ -305,15 +323,14 @@ class FCMNotificationService {
       for (final managerDoc in managersQuery.docs) {
         final fcmToken = managerDoc.data()['fcmToken'];
         if (fcmToken == null) continue;
-
         await _firestore.collection('notifications').add({
-          'type': TYPE_FLAGGED_ATTENDANCE,
+          'type': typeFlaggedAttendance,
           'userId': managerDoc.id,
           'fcmToken': fcmToken,
           'title': 'Flagged Attendance',
           'body': '$workerName has flagged attendance: $flagText',
           'data': {
-            'type': TYPE_FLAGGED_ATTENDANCE,
+            'type': typeFlaggedAttendance,
             'attendanceId': attendanceId,
             'workerName': workerName,
             'flags': flags,
@@ -322,10 +339,11 @@ class FCMNotificationService {
           'processed': false,
         });
       }
-
-      print('Flagged attendance notifications queued for company: $companyId');
+      AppLogger.info(
+        'Flagged attendance notifications queued for company: $companyId',
+      );
     } catch (e) {
-      print('Error sending flagged attendance notifications: $e');
+      AppLogger.error('Error sending flagged attendance notifications: $e');
     }
   }
 
@@ -348,15 +366,14 @@ class FCMNotificationService {
       for (final managerDoc in managersQuery.docs) {
         final fcmToken = managerDoc.data()['fcmToken'];
         if (fcmToken == null) continue;
-
         await _firestore.collection('notifications').add({
-          'type': TYPE_NEW_JUSTIFICATION,
+          'type': typeNewJustification,
           'userId': managerDoc.id,
           'fcmToken': fcmToken,
           'title': 'New Justification',
           'body': '$workerName submitted a justification: $reason',
           'data': {
-            'type': TYPE_NEW_JUSTIFICATION,
+            'type': typeNewJustification,
             'justificationId': justificationId,
             'workerName': workerName,
             'reason': reason,
@@ -365,10 +382,11 @@ class FCMNotificationService {
           'processed': false,
         });
       }
-
-      print('New justification notifications queued for company: $companyId');
+      AppLogger.info(
+        'New justification notifications queued for company: $companyId',
+      );
     } catch (e) {
-      print('Error sending new justification notifications: $e');
+      AppLogger.error('Error sending new justification notifications: $e');
     }
   }
 
@@ -393,13 +411,12 @@ class FCMNotificationService {
       for (final doc in oldNotificationsQuery.docs) {
         batch.delete(doc.reference);
       }
-
       await batch.commit();
-      print(
+      AppLogger.info(
         'Cleaned up ${oldNotificationsQuery.docs.length} old notifications',
       );
     } catch (e) {
-      print('Error cleaning up old notifications: $e');
+      AppLogger.error('Error cleaning up old notifications: $e');
     }
   }
 
@@ -413,5 +430,40 @@ class FCMNotificationService {
   static Future<bool> requestNotificationPermission() async {
     final settings = await _firebaseMessaging.requestPermission();
     return settings.authorizationStatus == AuthorizationStatus.authorized;
+  }
+
+  /// Store navigation intent for app to handle when it becomes active
+  static Future<void> _storeNavigationIntent(Map<String, dynamic> data) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_navigation', jsonEncode(data));
+      AppLogger.info('Navigation intent stored: ${data['type']}');
+    } catch (e) {
+      AppLogger.error('Failed to store navigation intent: $e');
+    }
+  }
+
+  /// Get and clear pending navigation intent
+  static Future<Map<String, dynamic>?> getPendingNavigationIntent() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final intentJson = prefs.getString('pending_navigation');
+      if (intentJson != null) {
+        await prefs.remove('pending_navigation');
+        return jsonDecode(intentJson);
+      }
+    } catch (e) {
+      AppLogger.error('Failed to get navigation intent: $e');
+    }
+    return null;
+  }
+
+  /// Check and handle pending navigation intent
+  static Future<void> handlePendingNavigation() async {
+    final intent = await getPendingNavigationIntent();
+    if (intent != null) {
+      AppLogger.info('Handling pending navigation: ${intent['type']}');
+      _processNotificationAction(intent);
+    }
   }
 }

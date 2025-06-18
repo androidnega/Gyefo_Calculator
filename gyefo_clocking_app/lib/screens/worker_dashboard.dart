@@ -11,6 +11,7 @@ import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
 import 'package:gyefo_clocking_app/screens/worker_attendance_detail_screen.dart';
+import 'package:gyefo_clocking_app/screens/worker_flagged_records_screen.dart';
 import 'package:gyefo_clocking_app/screens/notification_settings_screen.dart';
 import 'package:gyefo_clocking_app/widgets/offline_sync_widgets.dart';
 import 'package:intl/intl.dart';
@@ -346,6 +347,23 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
         builder: (context) => WorkerAttendanceDetailScreen(workerId: user.uid),
       ),
     );
+  }
+
+  Future<void> _viewMyFlaggedRecords() async {
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const WorkerFlaggedRecordsScreen(),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
+    }
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -705,6 +723,19 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                                     ),
                                   ),
                                 ],
+                              ),
+                              const SizedBox(height: 12),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: _viewMyFlaggedRecords,
+                                  icon: const Icon(Icons.flag, size: 20),
+                                  label: const Text('My Flagged Records'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.orange.shade600,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),

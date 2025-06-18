@@ -10,13 +10,13 @@ plugins {
 
 android {
     namespace = "com.example.gyefo_clocking_app"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35  // Updated for plugin compatibility
     ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-        isCoreLibraryDesugaringEnabled = true    }
+        targetCompatibility = JavaVersion.VERSION_11        isCoreLibraryDesugaringEnabled = true
+    }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
@@ -27,22 +27,34 @@ android {
         applicationId = "com.example.gyefo_clocking_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23
-        targetSdk = flutter.targetSdkVersion
+        minSdk = 23        targetSdk = 35  // Updated to match compileSdk
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
-        }    }
+            isMinifyEnabled = false
+            isShrinkResources = false
+            isDebuggable = false
+        }
+        getByName("debug") {
+            isDebuggable = true
+            isMinifyEnabled = false
+        }
+    }
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+    implementation("androidx.multidex:multidex:2.0.1")
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("com.google.android.material:material:1.11.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 flutter {

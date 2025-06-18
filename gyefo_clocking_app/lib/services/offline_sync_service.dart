@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gyefo_clocking_app/utils/logger.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -260,7 +261,7 @@ class OfflineSyncService {
           batch.set(docRef, attendanceData);
           syncedEntryIds.add(entry.id);
         } catch (e) {
-          print('Error preparing entry ${entry.id} for sync: $e');
+          AppLogger.error('Error preparing entry ${entry.id} for sync: $e');
           // Continue with other entries
         }
       }
@@ -280,7 +281,7 @@ class OfflineSyncService {
 
       return true;
     } catch (e) {
-      print('Sync error: $e');
+      AppLogger.error('Sync error: $e');
       _setSyncStatus(SyncStatus.error);
       await _saveSyncError(e.toString());
       return false;

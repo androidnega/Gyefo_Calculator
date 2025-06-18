@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gyefo_clocking_app/utils/logger.dart';
 import 'package:intl/intl.dart';
 
 class SimpleExportService {
@@ -93,7 +94,7 @@ class SimpleExportService {
 
       return file.path;
     } catch (e) {
-      print('Error exporting to CSV: $e');
+      AppLogger.error('Error exporting to CSV: $e');
       return null;
     }
   }
@@ -222,16 +223,12 @@ class SimpleExportService {
                       ],
                     ),
                     // Data rows
-                    ...tableData
-                        .map(
-                          (row) => pw.TableRow(
-                            children:
-                                row
-                                    .map((cell) => _buildTableCell(cell))
-                                    .toList(),
-                          ),
-                        )
-                        .toList(),
+                    for (final row in tableData)
+                      pw.TableRow(
+                        children: [
+                          for (final cell in row) _buildTableCell(cell),
+                        ],
+                      ),
                   ],
                 ),
 
@@ -272,7 +269,7 @@ class SimpleExportService {
 
       return file.path;
     } catch (e) {
-      print('Error exporting to PDF: $e');
+      AppLogger.error('Error exporting to PDF: $e');
       return null;
     }
   }
@@ -334,7 +331,7 @@ class SimpleExportService {
     try {
       await Share.shareXFiles([XFile(filePath)], text: title);
     } catch (e) {
-      print('Error sharing file: $e');
+      AppLogger.error('Error sharing file: $e');
     }
   }
 
@@ -346,7 +343,7 @@ class SimpleExportService {
 
       await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => bytes);
     } catch (e) {
-      print('Error printing PDF: $e');
+      AppLogger.error('Error printing PDF: $e');
     }
   }
 }

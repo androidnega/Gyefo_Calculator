@@ -8,11 +8,13 @@ import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
 import 'package:gyefo_clocking_app/services/shift_service.dart';
 import 'package:gyefo_clocking_app/services/firestore_service.dart';
 import 'package:gyefo_clocking_app/services/simple_notification_service.dart';
+import 'package:gyefo_clocking_app/services/manager_notification_service.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
+  final AttendanceAnalyticsService _analyticsService =
+      AttendanceAnalyticsService();
   final ShiftService _shiftService = ShiftService();
 
   Future<bool> hasClockedInToday(String workerId) async {
@@ -51,7 +53,9 @@ class AttendanceService {
       }
       return false; // Return false instead of throwing to prevent app crashes
     }
-  }  Future<void> clockIn(
+  }
+
+  Future<void> clockIn(
     String workerId, {
     Map<String, dynamic>? locationData,
   }) async {
@@ -79,7 +83,7 @@ class AttendanceService {
       // Get user and shift data for analytics
       UserModel? user;
       ShiftModel? shift;
-      
+
       try {
         final userData = await FirestoreService.getUserData(workerId);
         if (userData != null) {
@@ -102,6 +106,38 @@ class AttendanceService {
         auditLog: ['${now.toIso8601String()}: Clock-in recorded'],
       );
 
+      // Validate shift compliance
+      final shiftCompliance = await validateShiftCompliance(
+        workerId,
+        now,
+        'clock_in',
+      );
+      if (shiftCompliance['flags'].isNotEmpty) {
+        // Add shift compliance flags to the record
+        final existingFlags = newRecord.flags.toList();
+        for (final flag in shiftCompliance['flags']) {
+          switch (flag) {
+            case 'late':
+              existingFlags.add(AttendanceFlag.late);
+              break;
+            case 'non_working_day':
+              existingFlags.add(AttendanceFlag.nonWorkingDay);
+              break;
+          }
+        }
+
+        // Add compliance reasons to audit log
+        final auditLog = newRecord.auditLog.toList();
+        for (final reason in shiftCompliance['reasons']) {
+          auditLog.add('${now.toIso8601String()}: Shift compliance: $reason');
+        }
+
+        newRecord = newRecord.copyWith(
+          flags: existingFlags,
+          auditLog: auditLog,
+        );
+      }
+
       // Calculate analytics if shift data is available
       if (shift != null) {
         newRecord = await _analyticsService.calculateAttendanceAnalytics(
@@ -120,10 +156,11 @@ class AttendanceService {
           print('Within work zone: ${clockInLocation.isWithinWorkZone}');
         }
         if (newRecord.flags.isNotEmpty) {
-          print('Flags detected: ${newRecord.flags.map((f) => f.toString().split('.').last).join(', ')}');
+          print(
+            'Flags detected: ${newRecord.flags.map((f) => f.toString().split('.').last).join(', ')}',
+          );
         }
       }
-
       await _firestore
           .collection('attendance')
           .doc(workerId)
@@ -133,8 +170,39 @@ class AttendanceService {
       // Send notification for successful clock-in
       await SimpleNotificationService.showLocalNotification(
         title: 'Clock-in Successful',
-        body: 'You have successfully clocked in at ${DateFormat('h:mm a').format(now)}',
+        body:
+            'You have successfully clocked in at ${DateFormat('h:mm a').format(now)}',
       );
+
+      // Create manager notification for clock-in (especially if flagged)
+      if (user != null) {
+        // Get manager ID - for now using a placeholder, should be from company/team structure
+        final managerId = await _getManagerId(workerId);
+        if (managerId != null) {
+          // Always notify for flagged attendance, optionally for successful clock-ins
+          if (newRecord.flags.isNotEmpty) {
+            final flagReasons = newRecord.flags
+                .map((f) => f.toString().split('.').last)
+                .join(', ');
+            await NotificationService.createFlaggedAttendanceNotification(
+              managerId: managerId,
+              workerName: user.name,
+              workerId: workerId,
+              attendanceId: newRecord.date, // Using date as ID for now
+              reason: flagReasons,
+            );
+          } else {
+            // Optional: Create low-priority notification for successful clock-ins
+            await NotificationService.createClockSuccessNotification(
+              managerId: managerId,
+              workerName: user.name,
+              workerId: workerId,
+              attendanceId: newRecord.date,
+              action: 'clock_in',
+            );
+          }
+        }
+      }
 
       if (kDebugMode) {
         print(
@@ -148,6 +216,7 @@ class AttendanceService {
       rethrow;
     }
   }
+
   Future<void> clockOut(
     String workerId, {
     Map<String, dynamic>? locationData,
@@ -176,7 +245,8 @@ class AttendanceService {
           print('No active clock-in found for worker $workerId on $today');
         }
         throw Exception('No active clock-in found for today');
-      }      final doc = snapshot.docs.first;
+      }
+      final doc = snapshot.docs.first;
       final clockOutTime = DateTime.now();
 
       // Get current attendance record
@@ -213,11 +283,48 @@ class AttendanceService {
         auditLog: auditLog,
       );
 
+      // Validate shift compliance for clock-out
+      final shiftCompliance = await validateShiftCompliance(
+        workerId,
+        clockOutTime,
+        'clock_out',
+      );
+      if (shiftCompliance['flags'].isNotEmpty) {
+        // Add shift compliance flags to the record
+        final existingFlags = updatedRecord.flags.toList();
+        for (final flag in shiftCompliance['flags']) {
+          switch (flag) {
+            case 'early_departure':
+              existingFlags.add(AttendanceFlag.earlyClockOut);
+              break;
+            case 'unauthorized_overtime':
+              existingFlags.add(AttendanceFlag.unauthorizedOvertime);
+              break;
+            case 'non_working_day':
+              existingFlags.add(AttendanceFlag.nonWorkingDay);
+              break;
+          }
+        }
+
+        // Add compliance reasons to audit log
+        final complianceAuditLog = updatedRecord.auditLog.toList();
+        for (final reason in shiftCompliance['reasons']) {
+          complianceAuditLog.add(
+            '${clockOutTime.toIso8601String()}: Shift compliance: $reason',
+          );
+        }
+
+        updatedRecord = updatedRecord.copyWith(
+          flags: existingFlags,
+          auditLog: complianceAuditLog,
+        );
+      }
+
       // Recalculate analytics with clock-out data
       try {
         UserModel? user;
         ShiftModel? shift;
-        
+
         final userData = await FirestoreService.getUserData(workerId);
         if (userData != null) {
           user = UserModel.fromMap(userData, workerId);
@@ -242,7 +349,9 @@ class AttendanceService {
       if (kDebugMode) {
         print('Updating attendance record with clock-out data');
         if (updatedRecord.flags.isNotEmpty) {
-          print('Final flags: ${updatedRecord.flags.map((f) => f.toString().split('.').last).join(', ')}');
+          print(
+            'Final flags: ${updatedRecord.flags.map((f) => f.toString().split('.').last).join(', ')}',
+          );
         }
         if (updatedRecord.actualDuration != null) {
           print('Work duration: ${updatedRecord.workDurationFormatted}');
@@ -255,7 +364,8 @@ class AttendanceService {
       // Send notification for successful clock-out
       await SimpleNotificationService.showLocalNotification(
         title: 'Clock-out Successful',
-        body: 'You have successfully clocked out at ${DateFormat('h:mm a').format(clockOutTime)}',
+        body:
+            'You have successfully clocked out at ${DateFormat('h:mm a').format(clockOutTime)}',
       );
 
       if (kDebugMode) {
@@ -645,6 +755,109 @@ class AttendanceService {
       if (kDebugMode) {
         print('Error flagging attendance for review: $e');
       }
+    }
+  }
+
+  /// Validate shift compliance for attendance events
+  Future<Map<String, dynamic>> validateShiftCompliance(
+    String workerId,
+    DateTime clockTime,
+    String eventType, // 'clock_in' or 'clock_out'
+  ) async {
+    final flags = <String>[];
+    final reasons = <String>[];
+
+    try {
+      // Get worker details
+      final userDoc = await _firestore.collection('users').doc(workerId).get();
+      if (!userDoc.exists) {
+        return {'flags': flags, 'reasons': reasons};
+      }
+
+      final userData = userDoc.data()!;
+      final shiftId = userData['shiftId'] as String?;
+
+      // If no shift assigned, skip validation
+      if (shiftId == null) {
+        return {'flags': flags, 'reasons': reasons};
+      }
+
+      // Get shift details
+      final shift = await _shiftService.getShiftById(shiftId);
+      if (shift == null) {
+        return {'flags': flags, 'reasons': reasons};
+      }
+
+      // Check if working on non-scheduled day (including weekends)
+      if (_shiftService.isNonScheduledDay(shift, clockTime)) {
+        flags.add('non_working_day');
+        if (_shiftService.isWeekend(clockTime)) {
+          reasons.add('Worked on weekend when not allowed');
+        } else {
+          reasons.add('Worked on non-scheduled day');
+        }
+      }
+
+      // Validate clock-in specific rules
+      if (eventType == 'clock_in') {
+        if (_shiftService.isLateClockIn(shift, clockTime)) {
+          flags.add('late');
+          final gracePeriodEnd = _shiftService.getGracePeriodEnd(
+            shift,
+            clockTime,
+          );
+          final minutesLate = clockTime.difference(gracePeriodEnd).inMinutes;
+          reasons.add('Clock-in $minutesLate minutes after grace period');
+        }
+      }
+
+      // Validate clock-out specific rules
+      if (eventType == 'clock_out') {
+        if (_shiftService.isEarlyClockOut(shift, clockTime)) {
+          flags.add('early_departure');
+          final shiftEnd = _shiftService.parseShiftEndTime(shift, clockTime);
+          final minutesEarly = shiftEnd.difference(clockTime).inMinutes;
+          reasons.add('Clock-out $minutesEarly minutes before shift end');
+        }
+
+        if (_shiftService.isUnauthorizedOvertime(shift, clockTime)) {
+          flags.add('unauthorized_overtime');
+          final shiftEnd = _shiftService.parseShiftEndTime(shift, clockTime);
+          final overtimeMinutes = clockTime.difference(shiftEnd).inMinutes;
+          reasons.add('Unauthorized overtime: $overtimeMinutes minutes');
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error validating shift compliance: $e');
+      }
+    }
+    return {'flags': flags, 'reasons': reasons};
+  }
+
+  /// Helper method to get manager ID for a worker
+  /// In a real app, this would be based on team/company structure
+  Future<String?> _getManagerId(String workerId) async {
+    try {
+      // For now, get all users with 'manager' role
+      // In a real app, this should be based on team assignments or company hierarchy
+      final managersSnapshot =
+          await _firestore
+              .collection('users')
+              .where('role', isEqualTo: 'manager')
+              .limit(1)
+              .get();
+
+      if (managersSnapshot.docs.isNotEmpty) {
+        return managersSnapshot.docs.first.id;
+      }
+
+      return null;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting manager ID: $e');
+      }
+      return null;
     }
   }
 }

@@ -102,8 +102,8 @@ service cloud.firestore {
 
     // SHIFTS collection - Shift scheduling
     match /shifts/{shiftId} {
-      allow read: if isAuthenticated() && isSameCompany(resource.data.companyId);
-      allow write: if isManager() && isSameCompany(resource.data.companyId);
+      allow read: if isAuthenticated();
+      allow write: if isManager();
     }
 
     // HOLIDAYS collection - Holiday calendar

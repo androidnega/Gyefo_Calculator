@@ -55,6 +55,8 @@ enum AttendanceFlag {
   earlyClockOut,
   invalidDuration,
   suspicious,
+  nonWorkingDay,
+  unauthorizedOvertime,
 }
 
 enum JustificationStatus { pending, approved, rejected }
@@ -323,8 +325,9 @@ class AttendanceModel {
   }
 
   String get latenessFormatted {
-    if (latenessMinutes == null || latenessMinutes!.inMinutes <= 0)
+    if (latenessMinutes == null || latenessMinutes!.inMinutes <= 0) {
       return 'On time';
+    }
     final minutes = latenessMinutes!.inMinutes;
     if (minutes < 60) return '${minutes}m late';
     final hours = minutes ~/ 60;
@@ -333,8 +336,9 @@ class AttendanceModel {
   }
 
   String get overtimeFormatted {
-    if (overtimeMinutes == null || overtimeMinutes!.inMinutes <= 0)
+    if (overtimeMinutes == null || overtimeMinutes!.inMinutes <= 0) {
       return 'No overtime';
+    }
     final minutes = overtimeMinutes!.inMinutes;
     if (minutes < 60) return '${minutes}m overtime';
     final hours = minutes ~/ 60;

@@ -9,12 +9,17 @@ class TeamService {
   /// Get all teams (for managers to see all teams in the organization)
   Future<List<TeamModel>> getAllTeams() async {
     try {
-      final snapshot =
-          await _firestore.collection('teams').orderBy('name').get();
+      final snapshot = await _firestore.collection('teams').get();
 
-      return snapshot.docs
-          .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
-          .toList();
+      final teams =
+          snapshot.docs
+              .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
+              .toList();
+
+      // Sort in memory to avoid index requirement
+      teams.sort((a, b) => a.name.compareTo(b.name));
+
+      return teams;
     } catch (e) {
       AppLogger.error('Error fetching all teams: $e');
       return [];
@@ -28,13 +33,18 @@ class TeamService {
           await _firestore
               .collection('teams')
               .where('managerId', isEqualTo: managerId)
-              .where('isActive', isEqualTo: true)
-              .orderBy('name')
               .get();
 
-      return snapshot.docs
-          .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
-          .toList();
+      final teams =
+          snapshot.docs
+              .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
+              .where((team) => team.isActive) // Filter in memory
+              .toList();
+
+      // Sort in memory to avoid index requirement
+      teams.sort((a, b) => a.name.compareTo(b.name));
+
+      return teams;
     } catch (e) {
       AppLogger.error('Error fetching manager teams: $e');
       return [];
@@ -62,13 +72,17 @@ class TeamService {
           await _firestore
               .collection('teams')
               .where('memberIds', arrayContains: workerId)
-              .where('isActive', isEqualTo: true)
-              .limit(1)
               .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        final doc = snapshot.docs.first;
-        return TeamModel.fromMap(doc.data(), doc.id);
+      // Filter in memory to avoid compound index requirement
+      final activeTeams =
+          snapshot.docs
+              .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
+              .where((team) => team.isActive)
+              .toList();
+
+      if (activeTeams.isNotEmpty) {
+        return activeTeams.first;
       }
       return null;
     } catch (e) {

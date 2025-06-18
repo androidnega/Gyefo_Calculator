@@ -167,4 +167,84 @@ class ShiftService {
                   .toList(),
         );
   }
+
+  /// Parse shift start time as DateTime for given date
+  DateTime parseShiftStartTime(ShiftModel shift, DateTime date) {
+    final startTimeParts = shift.startTime.split(':');
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      int.parse(startTimeParts[0]),
+      int.parse(startTimeParts[1]),
+    );
+  }
+
+  /// Parse shift end time as DateTime for given date
+  DateTime parseShiftEndTime(ShiftModel shift, DateTime date) {
+    final endTimeParts = shift.endTime.split(':');
+    var endDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      int.parse(endTimeParts[0]),
+      int.parse(endTimeParts[1]),
+    );
+
+    // Handle overnight shifts (end time is next day)
+    final startDateTime = parseShiftStartTime(shift, date);
+    if (endDateTime.isBefore(startDateTime)) {
+      endDateTime = endDateTime.add(const Duration(days: 1));
+    }
+
+    return endDateTime;
+  }
+
+  /// Check if today is a weekend
+  bool isWeekend(DateTime date) {
+    return date.weekday == DateTime.saturday || date.weekday == DateTime.sunday;
+  }
+
+  /// Check if date is a work day according to shift
+  bool isWorkDay(ShiftModel shift, DateTime date) {
+    if (isWeekend(date) && !shift.allowWeekends) {
+      return false;
+    }
+    return shift.workDays.contains(date.weekday);
+  }
+
+  /// Get grace period end time for shift
+  DateTime getGracePeriodEnd(ShiftModel shift, DateTime date) {
+    final shiftStart = parseShiftStartTime(shift, date);
+    return shiftStart.add(Duration(minutes: shift.gracePeriodMinutes));
+  }
+
+  /// Check if worker is late based on shift rules
+  bool isLateClockIn(ShiftModel shift, DateTime clockInTime) {
+    if (!isWorkDay(shift, clockInTime)) return false;
+
+    final gracePeriodEnd = getGracePeriodEnd(shift, clockInTime);
+    return clockInTime.isAfter(gracePeriodEnd);
+  }
+
+  /// Check if clock-out is early
+  bool isEarlyClockOut(ShiftModel shift, DateTime clockOutTime) {
+    if (!isWorkDay(shift, clockOutTime)) return false;
+
+    final shiftEnd = parseShiftEndTime(shift, clockOutTime);
+    return clockOutTime.isBefore(shiftEnd);
+  }
+
+  /// Check if clock-out is unauthorized overtime
+  bool isUnauthorizedOvertime(ShiftModel shift, DateTime clockOutTime) {
+    if (!isWorkDay(shift, clockOutTime) || shift.allowOvertime) return false;
+
+    final shiftEnd = parseShiftEndTime(shift, clockOutTime);
+    return clockOutTime.isAfter(shiftEnd);
+  }
+
+  /// Check if working on non-scheduled day
+  bool isNonScheduledDay(ShiftModel shift, DateTime date) {
+    return !isWorkDay(shift, date);
+  }
 }

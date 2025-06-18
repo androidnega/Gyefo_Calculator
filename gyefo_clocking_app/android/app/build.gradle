@@ -1,0 +1,54 @@
+def flutterVersionCode = project.hasProperty('flutterVersionCode') ? project.flutterVersionCode : 1
+def flutterVersionName = project.hasProperty('flutterVersionName') ? project.flutterVersionName : "1.0"
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+apply plugin: 'kotlin-android'
+apply plugin: 'dev.flutter.flutter-gradle-plugin'
+
+android {
+    namespace "com.example.gyefo_clocking_app"
+    compileSdkVersion 35
+    ndkVersion "27.0.12077973"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+        coreLibraryDesugaringEnabled true
+    }
+
+    defaultConfig {
+        applicationId "com.example.gyefo_clocking_app"
+        minSdkVersion 23
+        targetSdkVersion 35
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+            shrinkResources false
+            debuggable false
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    implementation 'androidx.multidex:multidex:2.0.1'
+}
+
+flutter {
+    source '../..'
+}

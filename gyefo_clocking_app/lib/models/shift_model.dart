@@ -5,11 +5,12 @@ class ShiftModel {
   final String endTime; // "17:00"
   final List<int> workDays; // [1,2,3,4,5] for Mon-Fri
   final int gracePeriodMinutes;
+  final bool allowOvertime;
+  final bool allowWeekends;
   final bool isActive;
   final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
-
   ShiftModel({
     required this.id,
     required this.name,
@@ -17,12 +18,13 @@ class ShiftModel {
     required this.endTime,
     required this.workDays,
     this.gracePeriodMinutes = 15,
+    this.allowOvertime = false,
+    this.allowWeekends = false,
     this.isActive = true,
     this.description,
     required this.createdAt,
     required this.updatedAt,
   });
-
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -31,6 +33,8 @@ class ShiftModel {
       'endTime': endTime,
       'workDays': workDays,
       'gracePeriodMinutes': gracePeriodMinutes,
+      'allowOvertime': allowOvertime,
+      'allowWeekends': allowWeekends,
       'isActive': isActive,
       'description': description,
       'createdAt': createdAt.toIso8601String(),
@@ -46,6 +50,8 @@ class ShiftModel {
       endTime: map['endTime'] ?? '17:00',
       workDays: List<int>.from(map['workDays'] ?? [1, 2, 3, 4, 5]),
       gracePeriodMinutes: map['gracePeriodMinutes'] ?? 15,
+      allowOvertime: map['allowOvertime'] ?? false,
+      allowWeekends: map['allowWeekends'] ?? false,
       isActive: map['isActive'] ?? true,
       description: map['description'],
       createdAt: DateTime.parse(map['createdAt']),

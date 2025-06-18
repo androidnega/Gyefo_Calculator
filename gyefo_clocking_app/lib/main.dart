@@ -2,29 +2,27 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:gyefo_clocking_app/screens/loading_screen.dart';
-import 'package:gyefo_clocking_app/screens/login_screen.dart';
-import 'package:gyefo_clocking_app/screens/manager_dashboard.dart';
-import 'package:gyefo_clocking_app/screens/worker_dashboard.dart';
+import 'package:gyefo_clocking_app/screens/new_login_screen.dart';
+import 'package:gyefo_clocking_app/screens/modern_manager_dashboard.dart';
+import 'package:gyefo_clocking_app/screens/modern_worker_dashboard.dart';
 import 'package:gyefo_clocking_app/services/firestore_service.dart';
 import 'package:gyefo_clocking_app/services/simple_notification_service.dart';
 import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
+import 'package:gyefo_clocking_app/services/navigation_service.dart';
+import 'package:gyefo_clocking_app/services/fcm_notification_service.dart';
+import 'package:gyefo_clocking_app/themes/app_themes.dart';
+import 'firebase_options.dart';
 
 void main() async {
   // Make main asynchronous
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase first
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey:
-          "AIzaSyCsgwd4NSd61zW5O09sRK0N_hySDQn9LfI", // Updated to match Google Maps key
-      authDomain: "gyefo-clocks.firebaseapp.com",
-      projectId: "gyefo-clocks",
-      storageBucket: "gyefo-clocks.firebasestorage.app",
-      messagingSenderId: "791824155693",
-      appId: "1:791824155693:web:0622266e56fbf3cc8464a4",
-    ),
-  );
+  // Initialize Firebase first using generated options
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Load saved theme preference
+  await AppThemes.loadSavedTheme();
+
   // Initialize notifications
   await SimpleNotificationService.initialize();
 
@@ -36,16 +34,19 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gyefo Clocking App', // Changed title
-      debugShowCheckedModeBanner: false, // Remove debug banner
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueAccent,
-        ), // Changed color scheme
-        useMaterial3: true, // Enabled Material 3
-      ),
-      home: const AuthWrapper(),
+    return ValueListenableBuilder(
+      valueListenable: AppThemes.themeNotifier,
+      builder: (_, ThemeMode themeMode, __) {
+        return MaterialApp(
+          title: 'Gyefo Clocking App',
+          debugShowCheckedModeBanner: false,
+          navigatorKey: NavigationService.navigatorKey,
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: themeMode,
+          home: const AuthWrapper(),
+        );
+      },
     );
   }
 }
@@ -64,6 +65,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     _initializeOfflineSync();
+    _checkPendingNotifications();
   }
 
   @override
@@ -77,6 +79,11 @@ class _AuthWrapperState extends State<AuthWrapper> {
     if (user != null) {
       await _offlineSyncService.initialize();
     }
+  }
+
+  Future<void> _checkPendingNotifications() async {
+    // Check for pending navigation intents from notifications
+    await FCMNotificationService.handlePendingNavigation();
   }
 
   @override
@@ -99,18 +106,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
                   !roleSnapshot.hasData) {
                 return const LoadingScreen();
               }
-
               final role = roleSnapshot.data!;
               if (role == 'manager') {
-                return ManagerDashboard(
-                  offlineSyncService: _offlineSyncService,
-                );
+                return const ModernManagerDashboard();
               }
-              return WorkerDashboard(offlineSyncService: _offlineSyncService);
+              return const ModernWorkerDashboard();
             },
           );
         } else {
-          return const LoginScreen();
+          return const LoginScreen(); // Using new Ghana-inspired login
         }
       },
     );

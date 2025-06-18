@@ -350,6 +350,10 @@ class FlaggedAttendanceCard extends StatelessWidget {
         return Colors.pink.withValues(alpha: 0.3);
       case AttendanceFlag.longBreak:
         return Colors.cyan.withValues(alpha: 0.3);
+      case AttendanceFlag.nonWorkingDay:
+        return Colors.grey.withValues(alpha: 0.3);
+      case AttendanceFlag.unauthorizedOvertime:
+        return Colors.deepOrange.withValues(alpha: 0.3);
     }
   }
 

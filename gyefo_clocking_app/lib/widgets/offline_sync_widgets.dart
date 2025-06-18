@@ -263,9 +263,7 @@ class _OfflineSyncDebugScreenState extends State<OfflineSyncDebugScreen> {
                         if (entries.isEmpty)
                           const Text('No unsynced entries')
                         else
-                          ...entries
-                              .map((entry) => _buildEntryTile(entry))
-                              .toList(),
+                          ...entries.map((entry) => _buildEntryTile(entry)),
                       ],
                     ),
                   ),
@@ -398,11 +396,13 @@ class _OfflineSyncDebugScreenState extends State<OfflineSyncDebugScreen> {
                 onPressed: () async {
                   await widget.syncService.clearAllOfflineData();
                   if (mounted) {
-                    Navigator.pop(context);
-                    _loadSyncStats();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Offline data cleared')),
-                    );
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      _loadSyncStats();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Offline data cleared')),
+                      );
+                    }
                   }
                 },
                 style: TextButton.styleFrom(foregroundColor: Colors.red),

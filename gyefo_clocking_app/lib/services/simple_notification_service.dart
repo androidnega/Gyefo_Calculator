@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gyefo_clocking_app/utils/logger.dart';
 
 class SimpleNotificationService {
   static final FirebaseMessaging _firebaseMessaging =
@@ -18,7 +19,7 @@ class SimpleNotificationService {
           .requestPermission(alert: true, badge: true, sound: true);
 
       if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        print('User granted permission for notifications');
+        AppLogger.info('User granted permission for notifications');
 
         // Initialize local notifications
         const AndroidInitializationSettings initializationSettingsAndroid =
@@ -41,11 +42,10 @@ class SimpleNotificationService {
 
         // Update FCM token
         await _updateFCMToken();
-
-        print('Notifications initialized successfully');
+        AppLogger.info('Notifications initialized successfully');
       }
     } catch (e) {
-      print('Error initializing notifications: $e');
+      AppLogger.error('Error initializing notifications: $e');
     }
   }
 
@@ -61,10 +61,10 @@ class SimpleNotificationService {
           'fcmToken': token,
           'lastTokenUpdate': FieldValue.serverTimestamp(),
         });
-        print('FCM token updated successfully');
+        AppLogger.info('FCM token updated successfully');
       }
     } catch (e) {
-      print('Error updating FCM token: $e');
+      AppLogger.error('Error updating FCM token: $e');
     }
   }
 
@@ -105,7 +105,7 @@ class SimpleNotificationService {
         payload: payload,
       );
     } catch (e) {
-      print('Error showing local notification: $e');
+      AppLogger.error('Error showing local notification: $e');
     }
   }
 
@@ -125,9 +125,9 @@ class SimpleNotificationService {
         'createdAt': FieldValue.serverTimestamp(),
         'processed': false,
       });
-      print('Notification queued successfully');
+      AppLogger.info('Notification queued successfully');
     } catch (e) {
-      print('Error queuing notification: $e');
+      AppLogger.error('Error queuing notification: $e');
     }
   }
 
@@ -137,7 +137,7 @@ class SimpleNotificationService {
       final settings = await _firebaseMessaging.getNotificationSettings();
       return settings.authorizationStatus == AuthorizationStatus.authorized;
     } catch (e) {
-      print('Error checking notification permission: $e');
+      AppLogger.error('Error checking notification permission: $e');
       return false;
     }
   }

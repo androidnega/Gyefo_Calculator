@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/models/shift_model.dart';
@@ -579,6 +580,35 @@ class AttendanceAnalyticsService {
         print('Error adding comment: $e');
       }
       rethrow;
+    }
+  }
+
+  /// Get flagged records for a specific worker (for workers to view their own)
+  Future<List<AttendanceModel>> getMyFlaggedRecords({
+    String? workerId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final effectiveWorkerId =
+          workerId ?? FirebaseAuth.instance.currentUser?.uid;
+      if (effectiveWorkerId == null) return [];
+
+      final start =
+          startDate ?? DateTime.now().subtract(const Duration(days: 30));
+      final end = endDate ?? DateTime.now();
+
+      return await _getWorkerFlaggedRecords(
+        effectiveWorkerId,
+        DateFormat('yyyy-MM-dd').format(start),
+        DateFormat('yyyy-MM-dd').format(end),
+        null,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error getting my flagged records: $e');
+      }
+      return [];
     }
   }
 }

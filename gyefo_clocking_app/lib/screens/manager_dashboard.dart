@@ -8,8 +8,11 @@ import 'package:gyefo_clocking_app/screens/shift_management_screen.dart';
 import 'package:gyefo_clocking_app/screens/team_management_screen.dart';
 import 'package:gyefo_clocking_app/screens/advanced_reports_screen.dart';
 import 'package:gyefo_clocking_app/screens/flagged_attendance_screen.dart';
+import 'package:gyefo_clocking_app/screens/notification_demo_screen.dart';
+import 'package:gyefo_clocking_app/screens/worker_selection_for_calendar_screen.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
+import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
 
 class ManagerDashboard extends StatelessWidget {
   final OfflineSyncService? offlineSyncService;
@@ -49,24 +52,11 @@ class ManagerDashboard extends StatelessWidget {
   }
 
   void _navigateToCalendar(BuildContext context) {
-    // For now, we'll navigate to a worker selection screen
-    // In a real app, you might want to show a list of workers to select from
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Select Worker'),
-            content: const Text(
-              'In a complete implementation, you would select a worker to view their calendar. '
-              'For now, please use the individual worker attendance screens.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const WorkerSelectionForCalendarScreen(),
+      ),
     );
   }
 
@@ -112,14 +102,21 @@ class ManagerDashboard extends StatelessWidget {
     );
   }
 
+  void _navigateToNotificationDemo(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationDemoScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Manager Dashboard'),
         actions: [
+          NotificationBell(managerId: user?.uid ?? ''),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => _signOut(context),
@@ -520,6 +517,46 @@ class ManagerDashboard extends StatelessWidget {
                                 SizedBox(height: 4),
                                 Text(
                                   'Detailed analytics and insights',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Card(
+                  elevation: 1,
+                  color: Colors.purple[50],
+                  child: InkWell(
+                    onTap: () => _navigateToNotificationDemo(context),
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.science, color: Colors.purple, size: 28),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Notification Demo',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Test notification system (Development)',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,

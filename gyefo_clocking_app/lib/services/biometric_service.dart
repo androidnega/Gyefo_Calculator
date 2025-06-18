@@ -97,11 +97,11 @@ class BiometricService {
     if (biometrics.contains(MockBiometricType.weak)) {
       descriptions.add('Weak biometrics');
     }
-
     if (descriptions.isEmpty) return 'Biometric authentication';
     if (descriptions.length == 1) return descriptions.first;
-    if (descriptions.length == 2)
+    if (descriptions.length == 2) {
       return '${descriptions[0]} or ${descriptions[1]}';
+    }
 
     return '${descriptions.sublist(0, descriptions.length - 1).join(', ')}, or ${descriptions.last}';
   }

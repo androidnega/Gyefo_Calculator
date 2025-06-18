@@ -398,8 +398,8 @@ class _ManagerSettingsScreenState extends State<ManagerSettingsScreen> {
                 Text('• Troubleshooting issues'),
                 SizedBox(height: 12),
                 Text('Contact support:'),
-                Text('Email: support@gyefo.com'),
-                Text('Phone: +1 (555) 123-4567'),
+                Text('Email: support@manuelcode.info'),
+                Text('Phone: +233541069241'),
               ],
             ),
             actions: [
