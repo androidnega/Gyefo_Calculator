@@ -24,17 +24,23 @@ class AttendanceAnalyticsService {
 
       // Parse shift times for the attendance date
       final attendanceDate = attendance.clockIn;
-      final expectedClockIn = _parseShiftDateTime(attendanceDate, shift.startTime);
-      final expectedClockOut = _parseShiftDateTime(attendanceDate, shift.endTime);
-      
+      final expectedClockIn = _parseShiftDateTime(
+        attendanceDate,
+        shift.startTime,
+      );
+      final expectedClockOut = _parseShiftDateTime(
+        attendanceDate,
+        shift.endTime,
+      );
+
       // Calculate scheduled duration
       final scheduledDuration = expectedClockOut.difference(expectedClockIn);
-      
+
       // Calculate lateness
       Duration? latenessMinutes;
       final gracePeriod = Duration(minutes: shift.gracePeriodMinutes);
       final clockInWithGrace = expectedClockIn.add(gracePeriod);
-      
+
       if (attendance.clockIn.isAfter(clockInWithGrace)) {
         latenessMinutes = attendance.clockIn.difference(expectedClockIn);
       }
@@ -42,10 +48,10 @@ class AttendanceAnalyticsService {
       // Calculate actual duration and overtime (only if clocked out)
       Duration? actualDuration;
       Duration? overtimeMinutes;
-      
+
       if (attendance.clockOut != null) {
         actualDuration = attendance.clockOut!.difference(attendance.clockIn);
-        
+
         // Calculate overtime (work beyond expected clock out)
         if (attendance.clockOut!.isAfter(expectedClockOut)) {
           overtimeMinutes = attendance.clockOut!.difference(expectedClockOut);
@@ -67,9 +73,11 @@ class AttendanceAnalyticsService {
       }
 
       // Lateness flag
-      if (latenessMinutes != null && latenessMinutes.inMinutes > shift.gracePeriodMinutes) {
+      if (latenessMinutes != null &&
+          latenessMinutes.inMinutes > shift.gracePeriodMinutes) {
         flags.add(AttendanceFlag.late);
-        if (latenessMinutes.inMinutes > 30) { // Late by more than 30 minutes
+        if (latenessMinutes.inMinutes > 30) {
+          // Late by more than 30 minutes
           requiresJustification = true;
         }
       }
@@ -77,13 +85,15 @@ class AttendanceAnalyticsService {
       // Overtime flag
       if (overtimeMinutes != null && overtimeMinutes.inMinutes > 30) {
         flags.add(AttendanceFlag.overtime);
-        if (overtimeMinutes.inMinutes > 120) { // More than 2 hours overtime
+        if (overtimeMinutes.inMinutes > 120) {
+          // More than 2 hours overtime
           requiresJustification = true;
         }
       }
 
       // Early clock out flag
-      if (attendance.clockOut != null && attendance.clockOut!.isBefore(expectedClockOut)) {
+      if (attendance.clockOut != null &&
+          attendance.clockOut!.isBefore(expectedClockOut)) {
         final earlyLeave = expectedClockOut.difference(attendance.clockOut!);
         if (earlyLeave.inMinutes > 30) {
           flags.add(AttendanceFlag.earlyClockOut);
@@ -93,11 +103,13 @@ class AttendanceAnalyticsService {
 
       // Invalid duration flags
       if (actualDuration != null) {
-        if (actualDuration.inHours > 16) { // More than 16 hours work
+        if (actualDuration.inHours > 16) {
+          // More than 16 hours work
           flags.add(AttendanceFlag.invalidDuration);
           flags.add(AttendanceFlag.suspicious);
           requiresJustification = true;
-        } else if (actualDuration.inMinutes < 60) { // Less than 1 hour work
+        } else if (actualDuration.inMinutes < 60) {
+          // Less than 1 hour work
           flags.add(AttendanceFlag.invalidDuration);
           requiresJustification = true;
         }
@@ -108,8 +120,9 @@ class AttendanceAnalyticsService {
         final expectedWorkTime = scheduledDuration.inMinutes;
         final actualWorkTime = actualDuration.inMinutes;
         final difference = (actualWorkTime - expectedWorkTime).abs();
-        
-        if (difference > 120 && !flags.contains(AttendanceFlag.overtime)) { // 2+ hour difference
+
+        if (difference > 120 && !flags.contains(AttendanceFlag.overtime)) {
+          // 2+ hour difference
           flags.add(AttendanceFlag.longBreak);
         }
       }
@@ -118,7 +131,7 @@ class AttendanceAnalyticsService {
       List<String> auditLog = List.from(attendance.auditLog);
       auditLog.add(
         '${DateTime.now().toIso8601String()}: Analytics calculated - '
-        'Flags: ${flags.map((f) => f.toString().split('.').last).join(', ')}'
+        'Flags: ${flags.map((f) => f.toString().split('.').last).join(', ')}',
       );
 
       return attendance.copyWith(
@@ -149,7 +162,7 @@ class AttendanceAnalyticsService {
     final parts = timeString.split(':');
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1]);
-    
+
     return DateTime(date.year, date.month, date.day, hour, minute);
   }
 
@@ -161,21 +174,23 @@ class AttendanceAnalyticsService {
     try {
       final start = startDate ?? DateTime.now().subtract(Duration(days: 7));
       final end = start.add(Duration(days: 7));
-      
+
       final startDateStr = DateFormat('yyyy-MM-dd').format(start);
       final endDateStr = DateFormat('yyyy-MM-dd').format(end);
 
-      final snapshot = await _firestore
-          .collection('attendance')
-          .doc(workerId)
-          .collection('records')
-          .where('date', isGreaterThanOrEqualTo: startDateStr)
-          .where('date', isLessThanOrEqualTo: endDateStr)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('attendance')
+              .doc(workerId)
+              .collection('records')
+              .where('date', isGreaterThanOrEqualTo: startDateStr)
+              .where('date', isLessThanOrEqualTo: endDateStr)
+              .get();
 
-      final records = snapshot.docs
-          .map((doc) => AttendanceModel.fromMap(doc.data()))
-          .toList();
+      final records =
+          snapshot.docs
+              .map((doc) => AttendanceModel.fromMap(doc.data()))
+              .toList();
 
       return _calculateAnalyticsSummary(records);
     } catch (e) {
@@ -195,16 +210,14 @@ class AttendanceAnalyticsService {
     try {
       final start = startDate ?? DateTime.now().subtract(Duration(days: 7));
       final end = endDate ?? DateTime.now();
-      
+
       final startDateStr = DateFormat('yyyy-MM-dd').format(start);
       final endDateStr = DateFormat('yyyy-MM-dd').format(end);
 
       // Get all team members
-      final teamSnapshot = await _firestore
-          .collection('teams')
-          .doc(teamId)
-          .get();
-      
+      final teamSnapshot =
+          await _firestore.collection('teams').doc(teamId).get();
+
       if (!teamSnapshot.exists) {
         return {};
       }
@@ -216,18 +229,20 @@ class AttendanceAnalyticsService {
 
       // Collect attendance records for all team members
       for (String memberId in memberIds) {
-        final memberSnapshot = await _firestore
-            .collection('attendance')
-            .doc(memberId)
-            .collection('records')
-            .where('date', isGreaterThanOrEqualTo: startDateStr)
-            .where('date', isLessThanOrEqualTo: endDateStr)
-            .get();
+        final memberSnapshot =
+            await _firestore
+                .collection('attendance')
+                .doc(memberId)
+                .collection('records')
+                .where('date', isGreaterThanOrEqualTo: startDateStr)
+                .where('date', isLessThanOrEqualTo: endDateStr)
+                .get();
 
-        final memberRecords = memberSnapshot.docs
-            .map((doc) => AttendanceModel.fromMap(doc.data()))
-            .toList();
-        
+        final memberRecords =
+            memberSnapshot.docs
+                .map((doc) => AttendanceModel.fromMap(doc.data()))
+                .toList();
+
         allRecords.addAll(memberRecords);
       }
 
@@ -246,7 +261,9 @@ class AttendanceAnalyticsService {
   }
 
   /// Calculate analytics summary from a list of attendance records
-  Map<String, dynamic> _calculateAnalyticsSummary(List<AttendanceModel> records) {
+  Map<String, dynamic> _calculateAnalyticsSummary(
+    List<AttendanceModel> records,
+  ) {
     if (records.isEmpty) {
       return {
         'totalRecords': 0,
@@ -289,16 +306,14 @@ class AttendanceAnalyticsService {
       }
 
       // Count pending justifications
-      if (record.requiresJustification && 
-          (record.justification == null || 
-           record.justification!.status == JustificationStatus.pending)) {
+      if (record.requiresJustification &&
+          (record.justification == null ||
+              record.justification!.status == JustificationStatus.pending)) {
         justificationsPending++;
       }
 
       // Count perfect attendance (on time, no flags, complete)
-      if (!record.isLate && 
-          record.flags.isEmpty && 
-          record.isComplete) {
+      if (!record.isLate && record.flags.isEmpty && record.isComplete) {
         perfectAttendanceCount++;
       }
     }
@@ -308,14 +323,19 @@ class AttendanceAnalyticsService {
       'totalWorkHours': totalWorkHours,
       'totalOvertimeHours': totalOvertimeHours,
       'lateCount': lateCount,
-      'averageWorkHours': records.length > 0 ? totalWorkHours / records.length : 0.0,
+      'averageWorkHours':
+          records.isNotEmpty ? totalWorkHours / records.length : 0.0,
       'flaggedRecords': flaggedRecords,
       'justificationsPending': justificationsPending,
       'perfectAttendanceCount': perfectAttendanceCount,
-      'attendanceRate': records.length > 0 ? 
-          (perfectAttendanceCount / records.length * 100).round() : 0,
-      'punctualityRate': records.length > 0 ? 
-          ((records.length - lateCount) / records.length * 100).round() : 0,
+      'attendanceRate':
+          records.isNotEmpty
+              ? (perfectAttendanceCount / records.length * 100).round()
+              : 0,
+      'punctualityRate':
+          records.isNotEmpty
+              ? ((records.length - lateCount) / records.length * 100).round()
+              : 0,
     };
   }
 
@@ -329,7 +349,7 @@ class AttendanceAnalyticsService {
     try {
       final start = startDate ?? DateTime.now().subtract(Duration(days: 30));
       final end = endDate ?? DateTime.now();
-      
+
       final startDateStr = DateFormat('yyyy-MM-dd').format(start);
       final endDateStr = DateFormat('yyyy-MM-dd').format(end);
 
@@ -337,11 +357,9 @@ class AttendanceAnalyticsService {
 
       if (teamId != null) {
         // Get team members first
-        final teamSnapshot = await _firestore
-            .collection('teams')
-            .doc(teamId)
-            .get();
-        
+        final teamSnapshot =
+            await _firestore.collection('teams').doc(teamId).get();
+
         if (!teamSnapshot.exists) return [];
 
         final teamData = teamSnapshot.data()!;
@@ -350,17 +368,22 @@ class AttendanceAnalyticsService {
         // Query each member's attendance
         for (String memberId in memberIds) {
           final memberRecords = await _getWorkerFlaggedRecords(
-            memberId, startDateStr, endDateStr, filterFlags);
+            memberId,
+            startDateStr,
+            endDateStr,
+            filterFlags,
+          );
           flaggedRecords.addAll(memberRecords);
         }
       } else {
         // Query all attendance records (for company-wide view)
-        final snapshot = await _firestore
-            .collectionGroup('records')
-            .where('date', isGreaterThanOrEqualTo: startDateStr)
-            .where('date', isLessThanOrEqualTo: endDateStr)
-            .where('requiresJustification', isEqualTo: true)
-            .get();
+        final snapshot =
+            await _firestore
+                .collectionGroup('records')
+                .where('date', isGreaterThanOrEqualTo: startDateStr)
+                .where('date', isLessThanOrEqualTo: endDateStr)
+                .where('requiresJustification', isEqualTo: true)
+                .get();
 
         for (final doc in snapshot.docs) {
           final record = AttendanceModel.fromMap(doc.data());
@@ -389,14 +412,15 @@ class AttendanceAnalyticsService {
     String endDate,
     List<AttendanceFlag>? filterFlags,
   ) async {
-    final snapshot = await _firestore
-        .collection('attendance')
-        .doc(workerId)
-        .collection('records')
-        .where('date', isGreaterThanOrEqualTo: startDate)
-        .where('date', isLessThanOrEqualTo: endDate)
-        .where('requiresJustification', isEqualTo: true)
-        .get();
+    final snapshot =
+        await _firestore
+            .collection('attendance')
+            .doc(workerId)
+            .collection('records')
+            .where('date', isGreaterThanOrEqualTo: startDate)
+            .where('date', isLessThanOrEqualTo: endDate)
+            .where('requiresJustification', isEqualTo: true)
+            .get();
 
     return snapshot.docs
         .map((doc) => AttendanceModel.fromMap(doc.data()))
@@ -405,7 +429,10 @@ class AttendanceAnalyticsService {
   }
 
   /// Check if record matches filter flags
-  bool _matchesFilterFlags(AttendanceModel record, List<AttendanceFlag>? filterFlags) {
+  bool _matchesFilterFlags(
+    AttendanceModel record,
+    List<AttendanceFlag>? filterFlags,
+  ) {
     if (filterFlags == null || filterFlags.isEmpty) return true;
     return record.flags.any((flag) => filterFlags.contains(flag));
   }
@@ -425,7 +452,8 @@ class AttendanceAnalyticsService {
         submittedAt: DateTime.now(),
       );
 
-      final auditEntry = '${DateTime.now().toIso8601String()}: '
+      final auditEntry =
+          '${DateTime.now().toIso8601String()}: '
           'Justification submitted by $submittedByUserName: $reason';
 
       await _firestore
@@ -434,11 +462,11 @@ class AttendanceAnalyticsService {
           .collection('records')
           .doc(recordId)
           .update({
-        'justification': justification.toMap(),
-        'updatedAt': DateTime.now().toIso8601String(),
-        'lastModifiedBy': submittedByUserId,
-        'auditLog': FieldValue.arrayUnion([auditEntry]),
-      });
+            'justification': justification.toMap(),
+            'updatedAt': DateTime.now().toIso8601String(),
+            'lastModifiedBy': submittedByUserId,
+            'auditLog': FieldValue.arrayUnion([auditEntry]),
+          });
 
       if (kDebugMode) {
         print('Justification submitted for record $recordId');
@@ -461,8 +489,12 @@ class AttendanceAnalyticsService {
     String? rejectionReason,
   }) async {
     try {
-      final status = approved ? JustificationStatus.approved : JustificationStatus.rejected;
-      final now = DateTime.now();      final updateData = <String, dynamic>{
+      final status =
+          approved
+              ? JustificationStatus.approved
+              : JustificationStatus.rejected;
+      final now = DateTime.now();
+      final updateData = <String, dynamic>{
         'justification.status': status.toString().split('.').last,
         'justification.approvedByManagerId': managerId,
         'justification.approvedByManagerName': managerName,
@@ -475,7 +507,8 @@ class AttendanceAnalyticsService {
         updateData['justification.rejectionReason'] = rejectionReason;
       }
 
-      final auditEntry = '${now.toIso8601String()}: '
+      final auditEntry =
+          '${now.toIso8601String()}: '
           'Justification ${approved ? 'approved' : 'rejected'} by $managerName'
           '${rejectionReason != null ? ' - Reason: $rejectionReason' : ''}';
 
@@ -489,7 +522,9 @@ class AttendanceAnalyticsService {
           .update(updateData);
 
       if (kDebugMode) {
-        print('Justification ${approved ? 'approved' : 'rejected'} for record $recordId');
+        print(
+          'Justification ${approved ? 'approved' : 'rejected'} for record $recordId',
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -518,7 +553,8 @@ class AttendanceAnalyticsService {
         timestamp: DateTime.now(),
       );
 
-      final auditEntry = '${DateTime.now().toIso8601String()}: '
+      final auditEntry =
+          '${DateTime.now().toIso8601String()}: '
           'Comment added by $authorName ($authorRole): $comment';
 
       await _firestore
@@ -527,11 +563,13 @@ class AttendanceAnalyticsService {
           .collection('records')
           .doc(recordId)
           .update({
-        'justification.comments': FieldValue.arrayUnion([attendanceComment.toMap()]),
-        'updatedAt': DateTime.now().toIso8601String(),
-        'lastModifiedBy': authorId,
-        'auditLog': FieldValue.arrayUnion([auditEntry]),
-      });
+            'justification.comments': FieldValue.arrayUnion([
+              attendanceComment.toMap(),
+            ]),
+            'updatedAt': DateTime.now().toIso8601String(),
+            'lastModifiedBy': authorId,
+            'auditLog': FieldValue.arrayUnion([auditEntry]),
+          });
 
       if (kDebugMode) {
         print('Comment added to record $recordId by $authorName');

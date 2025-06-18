@@ -6,7 +6,8 @@ class BiometricSettingsScreen extends StatefulWidget {
   const BiometricSettingsScreen({super.key});
 
   @override
-  State<BiometricSettingsScreen> createState() => _BiometricSettingsScreenState();
+  State<BiometricSettingsScreen> createState() =>
+      _BiometricSettingsScreenState();
 }
 
 class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
@@ -42,8 +43,8 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              authenticated 
-                  ? 'Biometric authentication successful!' 
+              authenticated
+                  ? 'Biometric authentication successful!'
                   : 'Biometric authentication failed or was cancelled',
             ),
             backgroundColor: authenticated ? Colors.green : Colors.red,
@@ -66,34 +67,33 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Biometric Settings'),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildBiometricStatusCard(),
-                  const SizedBox(height: 16),
-                  if (_biometricInfo['isAvailable'] == true) ...[
-                    _buildBiometricDetailsCard(),
+      appBar: AppBar(title: const Text('Biometric Settings')),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildBiometricStatusCard(),
                     const SizedBox(height: 16),
-                    _buildTestCard(),
-                    const SizedBox(height: 16),
+                    if (_biometricInfo['isAvailable'] == true) ...[
+                      _buildBiometricDetailsCard(),
+                      const SizedBox(height: 16),
+                      _buildTestCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildSecurityInfoCard(),
                   ],
-                  _buildSecurityInfoCard(),
-                ],
+                ),
               ),
-            ),
     );
   }
 
   Widget _buildBiometricStatusCard() {
     final isAvailable = _biometricInfo['isAvailable'] ?? false;
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -110,8 +110,8 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
                 Text(
                   'Biometric Authentication Status',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -119,15 +119,21 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),                  decoration: BoxDecoration(
-                    color: isAvailable 
-                        ? Colors.green.withValues(alpha: 0.1) 
-                        : Colors.orange.withValues(alpha: 0.1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        isAvailable
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isAvailable 
-                          ? Colors.green.withValues(alpha: 0.3) 
-                          : Colors.orange.withValues(alpha: 0.3),
+                      color:
+                          isAvailable
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Colors.orange.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -145,9 +151,9 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
               isAvailable
                   ? 'Biometric authentication is available and will be used for secure clock in/out operations.'
                   : 'Biometric authentication is not available on this device. You will use standard authentication methods.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
             ),
           ],
         ),
@@ -157,7 +163,7 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
 
   Widget _buildBiometricDetailsCard() {
     final description = _biometricInfo['description'] ?? 'Unknown';
-    
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -166,16 +172,13 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.fingerprint,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.fingerprint, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'Available Biometrics',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -185,13 +188,17 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
             _buildDetailRow(
               Icons.device_hub,
               'Device Support',
-              _biometricInfo['isDeviceSupported'] == true ? 'Supported' : 'Not Supported',
+              _biometricInfo['isDeviceSupported'] == true
+                  ? 'Supported'
+                  : 'Not Supported',
             ),
             const SizedBox(height: 8),
             _buildDetailRow(
               Icons.check_circle,
               'Capability Check',
-              _biometricInfo['canCheckBiometrics'] == true ? 'Available' : 'Not Available',
+              _biometricInfo['canCheckBiometrics'] == true
+                  ? 'Available'
+                  : 'Not Available',
             ),
           ],
         ),
@@ -208,17 +215,17 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
         Text(
           '$label:',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[800],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[800]),
           ),
         ),
       ],
@@ -234,25 +241,22 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.science,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.science, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'Test Biometric Authentication',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               'Test your biometric authentication to ensure it works properly.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -278,16 +282,13 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'Security Information',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -321,11 +322,7 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          Icons.security,
-          size: 16,
-          color: Colors.grey[600],
-        ),
+        Icon(Icons.security, size: 16, color: Colors.grey[600]),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -333,15 +330,15 @@ class _BiometricSettingsScreenState extends State<BiometricSettingsScreen> {
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),

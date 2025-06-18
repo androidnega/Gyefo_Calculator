@@ -41,6 +41,7 @@ class _ClockButtonState extends State<ClockButton> {
       }
     }
   }
+
   Future<void> _handleClockAction() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -49,7 +50,8 @@ class _ClockButtonState extends State<ClockButton> {
     }
 
     // Check if biometric authentication should be used
-    final shouldUseBiometric = await BiometricService.shouldUseBiometricForClocking();
+    final shouldUseBiometric =
+        await BiometricService.shouldUseBiometricForClocking();
     if (shouldUseBiometric) {
       // Get worker name for personalized biometric prompt
       String? workerName;

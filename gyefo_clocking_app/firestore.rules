@@ -2,29 +2,131 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Everyone must be authenticated
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    // Helper functions for role-based access control
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
-    // USERS collection
-    match /users/{userId} {
-      allow read: if request.auth.uid == userId || isManager();
-      allow write: if isManager();
+    function getCurrentUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
-    // ATTENDANCE records
-    match /attendance/{workerId}/records/{recordId} {
-      // Workers: Only see & write their own records
-      allow read, write: if request.auth.uid == workerId;
-
-      // Managers: Can read all
-      allow read: if isManager();
-    }
-    
-    // Define reusable manager check
     function isManager() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+      return isAuthenticated() && getCurrentUser().data.role == 'manager';
+    }
+
+    function isWorker() {
+      return isAuthenticated() && getCurrentUser().data.role == 'worker';
+    }
+
+    function isSameCompany(resourceCompanyId) {
+      return getCurrentUser().data.companyId == resourceCompanyId;
+    }
+
+    function isManagerOfTeam(teamId) {
+      return isManager() && getCurrentUser().data.teamId == teamId;
+    }
+
+    function canAccessUserData(userId) {
+      // Users can access their own data, or managers can access workers in their company
+      return request.auth.uid == userId || 
+             (isManager() && isSameCompany(get(/databases/$(database)/documents/users/$(userId)).data.companyId));
+    }
+
+    // USERS collection - Profile management
+    match /users/{userId} {
+      allow read: if canAccessUserData(userId);
+      allow write: if request.auth.uid == userId || isManager();
+    }
+
+    // ATTENDANCE collection - Time tracking records
+    match /attendance/{attendanceId} {
+      allow read: if isAuthenticated() && (
+        // Workers can read their own records
+        resource.data.userId == request.auth.uid ||
+        // Managers can read records from their company
+        (isManager() && isSameCompany(resource.data.companyId))
+      );
+      
+      allow create: if isAuthenticated() && (
+        // Workers can only create records for themselves
+        (isWorker() && request.resource.data.userId == request.auth.uid) ||
+        // Managers can create records for workers in their company
+        (isManager() && isSameCompany(request.resource.data.companyId))
+      );
+      
+      allow update: if isAuthenticated() && (
+        // Workers can update their own records (for justifications)
+        (resource.data.userId == request.auth.uid && 
+         request.resource.data.userId == request.auth.uid) ||
+        // Managers can update records in their company
+        (isManager() && isSameCompany(resource.data.companyId))
+      );
+      
+      allow delete: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // JUSTIFICATIONS collection - Attendance justification workflow
+    match /justifications/{justificationId} {
+      allow read: if isAuthenticated() && (
+        // Workers can read their own justifications
+        resource.data.userId == request.auth.uid ||
+        // Managers can read justifications from their company
+        (isManager() && isSameCompany(resource.data.companyId))
+      );
+      
+      allow create: if isAuthenticated() && (
+        // Workers can create justifications for themselves
+        (isWorker() && request.resource.data.userId == request.auth.uid) ||
+        // Managers can create justifications
+        isManager()
+      );
+      
+      allow update: if isAuthenticated() && (
+        // Workers can update their own pending justifications
+        (resource.data.userId == request.auth.uid && 
+         resource.data.status == 'pending' &&
+         request.resource.data.userId == request.auth.uid) ||
+        // Managers can update any justification in their company (approve/reject)
+        (isManager() && isSameCompany(resource.data.companyId))
+      );
+      
+      allow delete: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // TEAMS collection - Team management
+    match /teams/{teamId} {
+      allow read: if isAuthenticated() && isSameCompany(resource.data.companyId);
+      allow write: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // SHIFTS collection - Shift scheduling
+    match /shifts/{shiftId} {
+      allow read: if isAuthenticated() && isSameCompany(resource.data.companyId);
+      allow write: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // HOLIDAYS collection - Holiday calendar
+    match /holidays/{holidayId} {
+      allow read: if isAuthenticated() && isSameCompany(resource.data.companyId);
+      allow write: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // COMPANIES collection - Company settings
+    match /companies/{companyId} {
+      allow read: if isAuthenticated() && isSameCompany(companyId);
+      allow write: if isManager() && isSameCompany(companyId);
+    }
+
+    // NOTIFICATIONS collection - Push notification tokens
+    match /notifications/{userId} {
+      allow read, write: if request.auth.uid == userId;
+      allow read: if isManager() && isSameCompany(resource.data.companyId);
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

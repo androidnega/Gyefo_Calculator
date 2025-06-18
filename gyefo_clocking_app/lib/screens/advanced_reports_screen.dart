@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:gyefo_clocking_app/models/team_model.dart';
 import 'package:gyefo_clocking_app/models/shift_model.dart';
 import 'package:gyefo_clocking_app/services/team_service.dart';
 import 'package:gyefo_clocking_app/services/shift_service.dart';
 import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
+import 'package:gyefo_clocking_app/services/simple_export_service.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
-import 'package:intl/intl.dart';
 
 class AdvancedReportsScreen extends StatefulWidget {
   const AdvancedReportsScreen({super.key});
@@ -14,18 +15,20 @@ class AdvancedReportsScreen extends StatefulWidget {
   State<AdvancedReportsScreen> createState() => _AdvancedReportsScreenState();
 }
 
-class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with SingleTickerProviderStateMixin {
+class _AdvancedReportsScreenState extends State<AdvancedReportsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TeamService _teamService = TeamService();
   final ShiftService _shiftService = ShiftService();
-  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
+  final AttendanceAnalyticsService _analyticsService =
+      AttendanceAnalyticsService();
 
   DateTimeRange? _selectedDateRange;
   String? _selectedTeamId;
   String? _selectedShiftId;
-    List<TeamModel> _teams = [];
+  List<TeamModel> _teams = [];
   List<ShiftModel> _shifts = [];
-  
+
   bool _isLoading = false;
   Map<String, dynamic> _analytics = {};
 
@@ -84,14 +87,30 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
 
     setState(() => _isLoading = true);
     try {
-      // This is a simplified implementation
-      // In a real app, you'd have more sophisticated queries
-      final analytics = {
+      // Basic analytics
+      Map<String, dynamic> analytics = {
         'totalDays': _selectedDateRange!.duration.inDays,
-        'totalEmployees': _teams.fold<int>(0, (sum, team) => sum + team.memberIds.length),
+        'totalEmployees': _teams.fold<int>(
+          0,
+          (sum, team) => sum + team.memberIds.length,
+        ),
         'activeTeams': _teams.where((team) => team.isActive).length,
         'activeShifts': _shifts.where((shift) => shift.isActive).length,
       };
+
+      // Add team-specific analytics if a team is selected
+      if (_selectedTeamId != null) {
+        try {
+          final teamAnalytics = await _analyticsService.getTeamAnalytics(
+            teamId: _selectedTeamId!,
+            startDate: _selectedDateRange!.start,
+            endDate: _selectedDateRange!.end,
+          );
+          analytics.addAll(teamAnalytics);
+        } catch (e) {
+          AppLogger.error('Error fetching team analytics: $e');
+        }
+      }
 
       setState(() {
         _analytics = analytics;
@@ -103,11 +122,130 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
     }
   }
 
+  void _showExportDialog(BuildContext context) {
+    if (_selectedDateRange == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a date range first')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Export Report'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Select export format:'),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _exportData('csv'),
+                        icon: const Icon(Icons.table_chart),
+                        label: const Text('CSV'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _exportData('pdf'),
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text('PDF'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<void> _exportData(String format) async {
+    Navigator.pop(context); // Close dialog
+
+    if (_selectedDateRange == null) return;
+
+    try {
+      setState(() => _isLoading = true);
+
+      String? filePath;
+      if (format == 'csv') {
+        filePath = await SimpleExportService.exportToCSV(
+          dateRange: _selectedDateRange!,
+          workerFilter: _selectedTeamId,
+        );
+      } else if (format == 'pdf') {
+        filePath = await SimpleExportService.exportToPDF(
+          dateRange: _selectedDateRange!,
+          workerFilter: _selectedTeamId,
+        );
+      }
+
+      if (filePath != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Report exported successfully'),
+              action: SnackBarAction(
+                label: 'Share',
+                onPressed:
+                    () => SimpleExportService.shareFile(
+                      filePath!,
+                      'Attendance Report ${DateFormat('yyyy-MM-dd').format(DateTime.now())}',
+                    ),
+              ),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to export report'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Advanced Reports'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: () => _showExportDialog(context),
+            tooltip: 'Export Report',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -145,24 +283,18 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Filters',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: _buildDateRangeButton(),
-                ),
+                Expanded(child: _buildDateRangeButton()),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildTeamDropdown(),
-                ),
+                Expanded(child: _buildTeamDropdown()),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildShiftDropdown(),
-                ),
+                Expanded(child: _buildShiftDropdown()),
               ],
             ),
           ],
@@ -192,14 +324,11 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: [
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text('All Teams'),
+        const DropdownMenuItem<String>(value: null, child: Text('All Teams')),
+        ..._teams.map(
+          (team) =>
+              DropdownMenuItem<String>(value: team.id, child: Text(team.name)),
         ),
-        ..._teams.map((team) => DropdownMenuItem<String>(
-              value: team.id,
-              child: Text(team.name),
-            )),
       ],
       onChanged: (value) {
         setState(() {
@@ -219,14 +348,13 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: [
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text('All Shifts'),
+        const DropdownMenuItem<String>(value: null, child: Text('All Shifts')),
+        ..._shifts.map(
+          (shift) => DropdownMenuItem<String>(
+            value: shift.id,
+            child: Text(shift.name),
+          ),
         ),
-        ..._shifts.map((shift) => DropdownMenuItem<String>(
-              value: shift.id,
-              child: Text(shift.name),
-            )),
       ],
       onChanged: (value) {
         setState(() {
@@ -291,7 +419,12 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -303,15 +436,15 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
             Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
             Text(
               title,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],
@@ -329,9 +462,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Quick Insights',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _buildInsightItem(
@@ -360,7 +493,12 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
     );
   }
 
-  Widget _buildInsightItem(IconData icon, String title, String description, Color color) {
+  Widget _buildInsightItem(
+    IconData icon,
+    String title,
+    String description,
+    Color color,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -372,15 +510,15 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -415,9 +553,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Team Performance Overview',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Container(
@@ -449,9 +587,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Team Details',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListView.separated(
@@ -471,7 +609,8 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
   }
 
   Widget _buildTeamTile(TeamModel team) {
-    return ListTile(      leading: CircleAvatar(
+    return ListTile(
+      leading: CircleAvatar(
         backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         child: Text(
           team.name[0].toUpperCase(),
@@ -484,8 +623,12 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
       title: Text(team.name),
       subtitle: Text('${team.memberIds.length} members'),
       trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),        decoration: BoxDecoration(
-          color: team.isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color:
+              team.isActive
+                  ? Colors.green.withValues(alpha: 0.1)
+                  : Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
@@ -526,9 +669,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Time Tracking Analytics',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Container(
@@ -560,9 +703,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           children: [
             Text(
               'Shift Analytics',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListView.separated(
@@ -602,9 +745,9 @@ class _AdvancedReportsScreenState extends State<AdvancedReportsScreen> with Sing
           ),
           Text(
             '${shift.workDays.length} days/week',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),

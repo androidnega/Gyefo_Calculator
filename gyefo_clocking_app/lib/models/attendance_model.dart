@@ -57,11 +57,7 @@ enum AttendanceFlag {
   suspicious,
 }
 
-enum JustificationStatus {
-  pending,
-  approved,
-  rejected,
-}
+enum JustificationStatus { pending, approved, rejected }
 
 class AttendanceComment {
   final String id;
@@ -143,11 +139,14 @@ class AttendanceJustification {
       submittedAt: DateTime.parse(map['submittedAt']),
       approvedByManagerId: map['approvedByManagerId'],
       approvedByManagerName: map['approvedByManagerName'],
-      approvedAt: map['approvedAt'] != null ? DateTime.parse(map['approvedAt']) : null,
+      approvedAt:
+          map['approvedAt'] != null ? DateTime.parse(map['approvedAt']) : null,
       rejectionReason: map['rejectionReason'],
-      comments: (map['comments'] as List?)
-          ?.map((c) => AttendanceComment.fromMap(c))
-          .toList() ?? [],
+      comments:
+          (map['comments'] as List?)
+              ?.map((c) => AttendanceComment.fromMap(c))
+              .toList() ??
+          [],
     );
   }
 }
@@ -159,7 +158,7 @@ class AttendanceModel {
   final String date;
   final AttendanceLocation? clockInLocation;
   final AttendanceLocation? clockOutLocation;
-  
+
   // Analytics and tracking fields
   final String? shiftId;
   final String? teamId;
@@ -169,12 +168,12 @@ class AttendanceModel {
   final Duration? overtimeMinutes;
   final DateTime? expectedClockIn;
   final DateTime? expectedClockOut;
-  
+
   // Flags and validation
   final List<AttendanceFlag> flags;
   final bool requiresJustification;
   final AttendanceJustification? justification;
-  
+
   // Audit trail
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -234,35 +233,67 @@ class AttendanceModel {
     return AttendanceModel(
       workerId: map['workerId'] as String,
       clockIn: DateTime.parse(map['clockIn'] as String),
-      clockOut: map['clockOut'] != null ? DateTime.parse(map['clockOut'] as String) : null,
-      clockInLocation: map['clockInLocation'] != null 
-          ? AttendanceLocation.fromMap(map['clockInLocation']) : null,
-      clockOutLocation: map['clockOutLocation'] != null 
-          ? AttendanceLocation.fromMap(map['clockOutLocation']) : null,
+      clockOut:
+          map['clockOut'] != null
+              ? DateTime.parse(map['clockOut'] as String)
+              : null,
+      clockInLocation:
+          map['clockInLocation'] != null
+              ? AttendanceLocation.fromMap(map['clockInLocation'])
+              : null,
+      clockOutLocation:
+          map['clockOutLocation'] != null
+              ? AttendanceLocation.fromMap(map['clockOutLocation'])
+              : null,
       shiftId: map['shiftId'],
       teamId: map['teamId'],
-      scheduledDuration: map['scheduledDuration'] != null 
-          ? Duration(minutes: map['scheduledDuration']) : null,
-      actualDuration: map['actualDuration'] != null 
-          ? Duration(minutes: map['actualDuration']) : null,
-      latenessMinutes: map['latenessMinutes'] != null 
-          ? Duration(minutes: map['latenessMinutes']) : null,
-      overtimeMinutes: map['overtimeMinutes'] != null 
-          ? Duration(minutes: map['overtimeMinutes']) : null,
-      expectedClockIn: map['expectedClockIn'] != null 
-          ? DateTime.parse(map['expectedClockIn']) : null,
-      expectedClockOut: map['expectedClockOut'] != null 
-          ? DateTime.parse(map['expectedClockOut']) : null,
-      flags: (map['flags'] as List?)?.map((f) => 
-          AttendanceFlag.values.firstWhere(
-            (e) => e.toString().split('.').last == f,
-            orElse: () => AttendanceFlag.suspicious,
-          )).toList() ?? [],
+      scheduledDuration:
+          map['scheduledDuration'] != null
+              ? Duration(minutes: map['scheduledDuration'])
+              : null,
+      actualDuration:
+          map['actualDuration'] != null
+              ? Duration(minutes: map['actualDuration'])
+              : null,
+      latenessMinutes:
+          map['latenessMinutes'] != null
+              ? Duration(minutes: map['latenessMinutes'])
+              : null,
+      overtimeMinutes:
+          map['overtimeMinutes'] != null
+              ? Duration(minutes: map['overtimeMinutes'])
+              : null,
+      expectedClockIn:
+          map['expectedClockIn'] != null
+              ? DateTime.parse(map['expectedClockIn'])
+              : null,
+      expectedClockOut:
+          map['expectedClockOut'] != null
+              ? DateTime.parse(map['expectedClockOut'])
+              : null,
+      flags:
+          (map['flags'] as List?)
+              ?.map(
+                (f) => AttendanceFlag.values.firstWhere(
+                  (e) => e.toString().split('.').last == f,
+                  orElse: () => AttendanceFlag.suspicious,
+                ),
+              )
+              .toList() ??
+          [],
       requiresJustification: map['requiresJustification'] ?? false,
-      justification: map['justification'] != null 
-          ? AttendanceJustification.fromMap(map['justification']) : null,
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : DateTime.now(),
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : DateTime.now(),
+      justification:
+          map['justification'] != null
+              ? AttendanceJustification.fromMap(map['justification'])
+              : null,
+      createdAt:
+          map['createdAt'] != null
+              ? DateTime.parse(map['createdAt'])
+              : DateTime.now(),
+      updatedAt:
+          map['updatedAt'] != null
+              ? DateTime.parse(map['updatedAt'])
+              : DateTime.now(),
       lastModifiedBy: map['lastModifiedBy'],
       auditLog: List<String>.from(map['auditLog'] ?? []),
     );
@@ -270,14 +301,20 @@ class AttendanceModel {
 
   // Analytics methods
   bool get isLate => latenessMinutes != null && latenessMinutes!.inMinutes > 0;
-  bool get hasOvertime => overtimeMinutes != null && overtimeMinutes!.inMinutes > 0;
+  bool get hasOvertime =>
+      overtimeMinutes != null && overtimeMinutes!.inMinutes > 0;
   bool get isClockInFlagged => clockInLocation?.isWithinWorkZone == false;
   bool get isClockOutFlagged => clockOutLocation?.isWithinWorkZone == false;
   bool get hasLocationFlags => isClockInFlagged || isClockOutFlagged;
-  bool get hasCriticalFlags => flags.any((flag) => 
-      [AttendanceFlag.outOfZone, AttendanceFlag.suspicious, AttendanceFlag.invalidDuration].contains(flag));
+  bool get hasCriticalFlags => flags.any(
+    (flag) => [
+      AttendanceFlag.outOfZone,
+      AttendanceFlag.suspicious,
+      AttendanceFlag.invalidDuration,
+    ].contains(flag),
+  );
   bool get isComplete => clockOut != null;
-  
+
   String get workDurationFormatted {
     if (actualDuration == null) return 'N/A';
     final hours = actualDuration!.inHours;
@@ -286,7 +323,8 @@ class AttendanceModel {
   }
 
   String get latenessFormatted {
-    if (latenessMinutes == null || latenessMinutes!.inMinutes <= 0) return 'On time';
+    if (latenessMinutes == null || latenessMinutes!.inMinutes <= 0)
+      return 'On time';
     final minutes = latenessMinutes!.inMinutes;
     if (minutes < 60) return '${minutes}m late';
     final hours = minutes ~/ 60;
@@ -295,7 +333,8 @@ class AttendanceModel {
   }
 
   String get overtimeFormatted {
-    if (overtimeMinutes == null || overtimeMinutes!.inMinutes <= 0) return 'No overtime';
+    if (overtimeMinutes == null || overtimeMinutes!.inMinutes <= 0)
+      return 'No overtime';
     final minutes = overtimeMinutes!.inMinutes;
     if (minutes < 60) return '${minutes}m overtime';
     final hours = minutes ~/ 60;
@@ -305,14 +344,14 @@ class AttendanceModel {
 
   String get statusSummary {
     if (!isComplete) return 'Active';
-    
+
     List<String> statusItems = [];
     if (isLate) statusItems.add('Late');
     if (hasOvertime) statusItems.add('Overtime');
     if (hasLocationFlags) statusItems.add('Location Issue');
     if (hasCriticalFlags) statusItems.add('Flagged');
     if (requiresJustification) statusItems.add('Needs Justification');
-    
+
     return statusItems.isEmpty ? 'Normal' : statusItems.join(', ');
   }
 
@@ -353,7 +392,8 @@ class AttendanceModel {
       expectedClockIn: expectedClockIn ?? this.expectedClockIn,
       expectedClockOut: expectedClockOut ?? this.expectedClockOut,
       flags: flags ?? this.flags,
-      requiresJustification: requiresJustification ?? this.requiresJustification,
+      requiresJustification:
+          requiresJustification ?? this.requiresJustification,
       justification: justification ?? this.justification,
       createdAt: createdAt,
       updatedAt: updatedAt ?? DateTime.now(),

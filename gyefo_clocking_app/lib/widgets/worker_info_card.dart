@@ -18,7 +18,7 @@ class WorkerInfoCard extends StatefulWidget {
 class _WorkerInfoCardState extends State<WorkerInfoCard> {
   final TeamService _teamService = TeamService();
   final ShiftService _shiftService = ShiftService();
-  
+
   TeamModel? _team;
   ShiftModel? _shift;
   bool _isLoading = true;
@@ -32,12 +32,12 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
   Future<void> _loadWorkerInfo() async {
     try {
       setState(() => _isLoading = true);
-      
+
       // Load team information
       if (widget.worker.teamId != null) {
         _team = await _teamService.getTeamById(widget.worker.teamId!);
       }
-      
+
       // Load shift information
       if (widget.worker.shiftId != null) {
         _shift = await _shiftService.getShiftById(widget.worker.shiftId!);
@@ -45,7 +45,7 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
         // If worker doesn't have individual shift, check team shift
         _shift = await _shiftService.getShiftById(_team!.shiftId!);
       }
-      
+
       setState(() => _isLoading = false);
     } catch (e) {
       AppLogger.error('Error loading worker info: $e');
@@ -72,24 +72,21 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.person,
-                  color: Theme.of(context).primaryColor,
-                ),
+                Icon(Icons.person, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
                   'My Information',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Worker Name
             _buildInfoRow(Icons.badge, 'Name', widget.worker.name),
-            
+
             // Team Information
             if (_team != null) ...[
               const SizedBox(height: 8),
@@ -101,9 +98,9 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
                   child: Text(
                     _team!.description!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
-                        ),
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               ],
@@ -116,7 +113,7 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
                 valueColor: Colors.orange,
               ),
             ],
-            
+
             // Shift Information
             if (_shift != null) ...[
               const SizedBox(height: 8),
@@ -129,23 +126,23 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
                   children: [
                     Text(
                       'Working Hours: ${_shift!.startTime} - ${_shift!.endTime}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Working Days: ${_getWorkingDaysText(_shift!.workDays)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Grace Period: ${_shift!.gracePeriodMinutes} minutes',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -159,11 +156,15 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
                 valueColor: Colors.orange,
               ),
             ],
-            
+
             // Department (if available)
             if (widget.worker.department != null) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.business, 'Department', widget.worker.department!),
+              _buildInfoRow(
+                Icons.business,
+                'Department',
+                widget.worker.department!,
+              ),
             ],
           ],
         ),
@@ -171,7 +172,12 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -180,18 +186,18 @@ class _WorkerInfoCardState extends State<WorkerInfoCard> {
         Text(
           '$label:',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: valueColor ?? Colors.grey[800],
-                  fontWeight: valueColor != null ? FontWeight.w500 : null,
-                ),
+              color: valueColor ?? Colors.grey[800],
+              fontWeight: valueColor != null ? FontWeight.w500 : null,
+            ),
           ),
         ),
       ],

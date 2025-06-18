@@ -34,9 +34,10 @@ class UserModel {
       isActive: data['isActive'] ?? true,
       phoneNumber: data['phoneNumber'] as String?,
       department: data['department'] as String?,
-      joinDate: data['joinDate'] != null 
-          ? DateTime.parse(data['joinDate'] as String)
-          : null,
+      joinDate:
+          data['joinDate'] != null
+              ? DateTime.parse(data['joinDate'] as String)
+              : null,
     );
   }
 

@@ -94,9 +94,10 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
       final team = TeamModel(
         id: _isEditing ? widget.team!.id : '',
         name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
-            : _descriptionController.text.trim(),
+        description:
+            _descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim(),
         managerId: _isEditing ? widget.team!.managerId : currentUser.uid,
         memberIds: _isEditing ? widget.team!.memberIds : [],
         shiftId: _selectedShiftId,
@@ -105,14 +106,17 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
         updatedAt: DateTime.now(),
       );
 
-      final success = _isEditing 
-          ? await _teamService.updateTeam(team)
-          : await _teamService.createTeam(team) != null;
+      final success =
+          _isEditing
+              ? await _teamService.updateTeam(team)
+              : await _teamService.createTeam(team) != null;
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Team ${_isEditing ? 'updated' : 'created'} successfully'),
+            content: Text(
+              'Team ${_isEditing ? 'updated' : 'created'} successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -130,7 +134,9 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error ${_isEditing ? 'updating' : 'creating'} team: $e'),
+            content: Text(
+              'Error ${_isEditing ? 'updating' : 'creating'} team: $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -193,9 +199,9 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
           children: [
             Text(
               'Basic Information',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -237,9 +243,9 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
           children: [
             Text(
               'Shift Assignment',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             if (_isLoadingShifts)
@@ -277,10 +283,14 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
                     value: null,
                     child: Text('No shift assigned'),
                   ),
-                  ..._availableShifts.map((shift) => DropdownMenuItem<String>(
-                        value: shift.id,
-                        child: Text('${shift.name} (${shift.startTime} - ${shift.endTime})'),
-                      )),
+                  ..._availableShifts.map(
+                    (shift) => DropdownMenuItem<String>(
+                      value: shift.id,
+                      child: Text(
+                        '${shift.name} (${shift.startTime} - ${shift.endTime})',
+                      ),
+                    ),
+                  ),
                 ],
                 onChanged: (value) {
                   setState(() {
@@ -303,9 +313,9 @@ class _TeamFormScreenState extends State<TeamFormScreen> {
           children: [
             Text(
               'Settings',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             SwitchListTile(

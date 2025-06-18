@@ -6,15 +6,19 @@ import 'package:gyefo_clocking_app/widgets/worker_info_card.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
 import 'package:gyefo_clocking_app/services/export_service.dart';
+import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
 import 'package:gyefo_clocking_app/screens/worker_attendance_detail_screen.dart';
 import 'package:gyefo_clocking_app/screens/notification_settings_screen.dart';
+import 'package:gyefo_clocking_app/widgets/offline_sync_widgets.dart';
 import 'package:intl/intl.dart';
 
 class WorkerDashboard extends StatefulWidget {
-  const WorkerDashboard({super.key});
+  final OfflineSyncService? offlineSyncService;
+
+  const WorkerDashboard({super.key, this.offlineSyncService});
 
   @override
   State<WorkerDashboard> createState() => _WorkerDashboardState();
@@ -407,6 +411,12 @@ class _WorkerDashboardState extends State<WorkerDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Offline Sync Status
+                      if (widget.offlineSyncService != null)
+                        OfflineSyncStatusWidget(
+                          syncService: widget.offlineSyncService!,
+                        ),
+
                       // Worker Info Card
                       if (_workerInfo != null)
                         WorkerInfoCard(worker: _workerInfo!),

@@ -48,21 +48,24 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
   Future<void> _deleteTeam(TeamModel team) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Team'),
-        content: Text('Are you sure you want to delete "${team.name}"?\n\nThis will remove all team assignments for members.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Team'),
+            content: Text(
+              'Are you sure you want to delete "${team.name}"?\n\nThis will remove all team assignments for members.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -89,12 +92,12 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
         }
       }
     }
-  }  void _navigateToTeamForm({TeamModel? team}) async {
+  }
+
+  void _navigateToTeamForm({TeamModel? team}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TeamFormScreen(team: team),
-      ),
+      MaterialPageRoute(builder: (context) => TeamFormScreen(team: team)),
     );
 
     if (result == true) {
@@ -105,9 +108,7 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
   void _navigateToTeamDetail(TeamModel team) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => TeamDetailScreen(team: team),
-      ),
+      MaterialPageRoute(builder: (context) => TeamDetailScreen(team: team)),
     );
 
     if (result == true) {
@@ -128,9 +129,10 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _teams.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _teams.isEmpty
               ? _buildEmptyState()
               : _buildTeamList(),
     );
@@ -143,24 +145,20 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.groups,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.groups, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No Teams Created',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Create your first team to organize employees',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -208,17 +206,15 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                       children: [
                         Text(
                           team.name,
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         if (team.description != null) ...[
                           const SizedBox(height: 4),
                           Text(
                             team.description!,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                         ],
                       ],
@@ -238,38 +234,42 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
                           break;
                       }
                     },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'view',
-                        child: Row(
-                          children: [
-                            Icon(Icons.visibility, size: 20),
-                            SizedBox(width: 8),
-                            Text('View Details'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit, size: 20),
-                            SizedBox(width: 8),
-                            Text('Edit'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 20, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
+                    itemBuilder:
+                        (context) => [
+                          const PopupMenuItem(
+                            value: 'view',
+                            child: Row(
+                              children: [
+                                Icon(Icons.visibility, size: 20),
+                                SizedBox(width: 8),
+                                Text('View Details'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 20, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Delete',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                   ),
                 ],
               ),
@@ -292,17 +292,9 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
         ),
         const SizedBox(width: 8),
         if (team.shiftId != null)
-          _buildStatChip(
-            Icons.schedule,
-            'Shift Assigned',
-            Colors.green,
-          )
+          _buildStatChip(Icons.schedule, 'Shift Assigned', Colors.green)
         else
-          _buildStatChip(
-            Icons.schedule_outlined,
-            'No Shift',
-            Colors.orange,
-          ),
+          _buildStatChip(Icons.schedule_outlined, 'No Shift', Colors.orange),
         const SizedBox(width: 8),
         _buildStatChip(
           Icons.info_outline,
@@ -315,7 +307,8 @@ class _TeamManagementScreenState extends State<TeamManagementScreen> {
 
   Widget _buildStatChip(IconData icon, String label, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),      decoration: BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color.withValues(alpha: 0.3)),

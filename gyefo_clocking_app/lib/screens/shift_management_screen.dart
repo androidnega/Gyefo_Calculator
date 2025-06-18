@@ -47,21 +47,22 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   Future<void> _deleteShift(ShiftModel shift) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Shift'),
-        content: Text('Are you sure you want to delete "${shift.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Delete Shift'),
+            content: Text('Are you sure you want to delete "${shift.name}"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -93,9 +94,7 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   void _navigateToShiftForm({ShiftModel? shift}) async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => ShiftFormScreen(shift: shift),
-      ),
+      MaterialPageRoute(builder: (context) => ShiftFormScreen(shift: shift)),
     );
 
     if (result == true) {
@@ -116,9 +115,10 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _shifts.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _shifts.isEmpty
               ? _buildEmptyState()
               : _buildShiftList(),
     );
@@ -131,24 +131,20 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.schedule,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.schedule, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               'No Shifts Created',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Text(
               'Create your first shift to organize work schedules',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[500],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -194,16 +190,15 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                       Text(
                         shift.name,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       if (shift.description != null) ...[
                         const SizedBox(height: 4),
                         Text(
                           shift.description!,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.grey[600]),
                         ),
                       ],
                     ],
@@ -220,28 +215,32 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
                         break;
                     }
                   },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 8),
-                          Text('Edit'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, size: 20, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
+                  itemBuilder:
+                      (context) => [
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, size: 20),
+                              SizedBox(width: 8),
+                              Text('Edit'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, size: 20, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                 ),
               ],
             ),
@@ -255,7 +254,8 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
 
   Widget _buildShiftDetails(ShiftModel shift) {
     return Column(
-      children: [        _buildDetailRow(
+      children: [
+        _buildDetailRow(
           Icons.access_time,
           'Hours',
           '${shift.startTime} - ${shift.endTime}',
@@ -283,7 +283,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _buildDetailRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Row(
       children: [
         Icon(icon, size: 20, color: Colors.grey[600]),
@@ -291,18 +296,18 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         Text(
           '$label:',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: valueColor ?? Colors.grey[800],
-                  fontWeight: valueColor != null ? FontWeight.w500 : null,
-                ),
+              color: valueColor ?? Colors.grey[800],
+              fontWeight: valueColor != null ? FontWeight.w500 : null,
+            ),
           ),
         ),
       ],
@@ -312,12 +317,12 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
   String _getDayName(int day) {
     const days = [
       'Monday',
-      'Tuesday', 
+      'Tuesday',
       'Wednesday',
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     return days[day - 1];
   }

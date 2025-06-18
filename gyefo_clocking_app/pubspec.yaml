@@ -47,7 +47,12 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   timezone: ^0.9.2  # Calendar
   table_calendar: ^3.0.9  # URL Launcher and Maps
-  url_launcher: ^6.2.5
+  url_launcher: ^6.2.5  # Offline sync dependencies
+  shared_preferences: ^2.2.2
+  connectivity_plus: ^5.0.2  # FCM push notifications
+  firebase_messaging: ^15.2.7
+  # Package info
+  package_info_plus: ^4.2.0
   # Maps and Location
   google_maps_flutter: ^2.5.3
   google_maps_flutter_web: ^0.5.4+3

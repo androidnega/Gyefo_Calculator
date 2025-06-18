@@ -8,11 +8,12 @@ class ShiftService {
   /// Get all shifts
   Future<List<ShiftModel>> getAllShifts() async {
     try {
-      final snapshot = await _firestore
-          .collection('shifts')
-          .where('isActive', isEqualTo: true)
-          .orderBy('name')
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('shifts')
+              .where('isActive', isEqualTo: true)
+              .orderBy('name')
+              .get();
 
       return snapshot.docs
           .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
@@ -52,10 +53,7 @@ class ShiftService {
   /// Update shift
   Future<bool> updateShift(ShiftModel shift) async {
     try {
-      await _firestore
-          .collection('shifts')
-          .doc(shift.id)
-          .update(shift.toMap());
+      await _firestore.collection('shifts').doc(shift.id).update(shift.toMap());
       AppLogger.success('Shift updated successfully: ${shift.name}');
       return true;
     } catch (e) {
@@ -104,7 +102,9 @@ class ShiftService {
       );
 
       // Add grace period
-      final graceEnd = shiftStart.add(Duration(minutes: shift.gracePeriodMinutes));
+      final graceEnd = shiftStart.add(
+        Duration(minutes: shift.gracePeriodMinutes),
+      );
 
       return clockInTime.isAfter(graceEnd);
     } catch (e) {
@@ -160,8 +160,11 @@ class ShiftService {
         .where('isActive', isEqualTo: true)
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => ShiftModel.fromMap(doc.data(), doc.id))
+                  .toList(),
+        );
   }
 }

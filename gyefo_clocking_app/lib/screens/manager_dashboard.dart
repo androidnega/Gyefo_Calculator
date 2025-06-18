@@ -9,9 +9,12 @@ import 'package:gyefo_clocking_app/screens/team_management_screen.dart';
 import 'package:gyefo_clocking_app/screens/advanced_reports_screen.dart';
 import 'package:gyefo_clocking_app/screens/flagged_attendance_screen.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
+import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
 
 class ManagerDashboard extends StatelessWidget {
-  const ManagerDashboard({super.key});
+  final OfflineSyncService? offlineSyncService;
+
+  const ManagerDashboard({super.key, this.offlineSyncService});
 
   Future<void> _signOut(BuildContext context) async {
     try {
@@ -84,36 +87,28 @@ class ManagerDashboard extends StatelessWidget {
   void _navigateToShiftManagement(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const ShiftManagementScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ShiftManagementScreen()),
     );
   }
 
   void _navigateToTeamManagement(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const TeamManagementScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const TeamManagementScreen()),
     );
   }
 
   void _navigateToAdvancedReports(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AdvancedReportsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const AdvancedReportsScreen()),
     );
   }
 
   void _navigateToFlaggedAttendance(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const FlaggedAttendanceScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const FlaggedAttendanceScreen()),
     );
   }
 
@@ -298,7 +293,8 @@ class ManagerDashboard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                          ),                          Icon(Icons.arrow_forward_ios, size: 16),
+                          ),
+                          Icon(Icons.arrow_forward_ios, size: 16),
                         ],
                       ),
                     ),

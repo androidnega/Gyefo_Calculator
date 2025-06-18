@@ -48,20 +48,20 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
     _nameController.text = shift.name;
     _descriptionController.text = shift.description ?? '';
     _gracePeriodController.text = shift.gracePeriodMinutes.toString();
-    
+
     // Parse time strings
     final startParts = shift.startTime.split(':');
     _startTime = TimeOfDay(
       hour: int.parse(startParts[0]),
       minute: int.parse(startParts[1]),
     );
-    
+
     final endParts = shift.endTime.split(':');
     _endTime = TimeOfDay(
       hour: int.parse(endParts[0]),
       minute: int.parse(endParts[1]),
     );
-    
+
     _selectedDays = Set<int>.from(shift.workDays);
     _isActive = shift.isActive;
   }
@@ -121,9 +121,10 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
         workDays: _selectedDays.toList()..sort(),
         gracePeriodMinutes: int.parse(_gracePeriodController.text),
         isActive: _isActive,
-        description: _descriptionController.text.trim().isEmpty 
-            ? null 
-            : _descriptionController.text.trim(),
+        description:
+            _descriptionController.text.trim().isEmpty
+                ? null
+                : _descriptionController.text.trim(),
         createdAt: _isEditing ? widget.shift!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -137,7 +138,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Shift ${_isEditing ? 'updated' : 'created'} successfully'),
+            content: Text(
+              'Shift ${_isEditing ? 'updated' : 'created'} successfully',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -148,7 +151,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error ${_isEditing ? 'updating' : 'creating'} shift: $e'),
+            content: Text(
+              'Error ${_isEditing ? 'updating' : 'creating'} shift: $e',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -213,9 +218,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
           children: [
             Text(
               'Basic Information',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -257,9 +262,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
           children: [
             Text(
               'Working Hours',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Row(
@@ -301,9 +306,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 4),
             Row(
@@ -331,17 +336,15 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
           children: [
             Text(
               'Working Days',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: [
-                for (int i = 1; i <= 7; i++) _buildDayChip(i),
-              ],
+              children: [for (int i = 1; i <= 7; i++) _buildDayChip(i)],
             ),
           ],
         ),
@@ -377,9 +380,9 @@ class _ShiftFormScreenState extends State<ShiftFormScreen> {
           children: [
             Text(
               'Settings',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextFormField(

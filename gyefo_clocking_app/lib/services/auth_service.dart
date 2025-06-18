@@ -215,7 +215,9 @@ class AuthService {
       }
       return null;
     }
-  }  /// Get worker details by ID
+  }
+
+  /// Get worker details by ID
   Future<UserModel?> getWorkerById(String workerId) async {
     try {
       final userData = await FirestoreService.getUserData(workerId);

@@ -7,6 +7,7 @@ import 'package:gyefo_clocking_app/services/location_service.dart';
 import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
 import 'package:gyefo_clocking_app/services/shift_service.dart';
 import 'package:gyefo_clocking_app/services/firestore_service.dart';
+import 'package:gyefo_clocking_app/services/simple_notification_service.dart';
 import 'package:intl/intl.dart';
 
 class AttendanceService {
@@ -129,6 +130,12 @@ class AttendanceService {
           .collection('records')
           .add(newRecord.toMap());
 
+      // Send notification for successful clock-in
+      await SimpleNotificationService.showLocalNotification(
+        title: 'Clock-in Successful',
+        body: 'You have successfully clocked in at ${DateFormat('h:mm a').format(now)}',
+      );
+
       if (kDebugMode) {
         print(
           'Worker $workerId clocked in successfully at ${now.toIso8601String()}',
@@ -244,6 +251,12 @@ class AttendanceService {
 
       // Update the document with all new data
       await doc.reference.update(updatedRecord.toMap());
+
+      // Send notification for successful clock-out
+      await SimpleNotificationService.showLocalNotification(
+        title: 'Clock-out Successful',
+        body: 'You have successfully clocked out at ${DateFormat('h:mm a').format(clockOutTime)}',
+      );
 
       if (kDebugMode) {
         print(

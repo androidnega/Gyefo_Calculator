@@ -2,13 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
 
 // Mock biometric types enum for demo purposes
-enum MockBiometricType {
-  face,
-  fingerprint,
-  iris,
-  strong,
-  weak,
-}
+enum MockBiometricType { face, fingerprint, iris, strong, weak }
 
 class BiometricService {
   /// Check if biometric authentication is available on the device
@@ -18,7 +12,7 @@ class BiometricService {
       // Mock implementation - in production this would use local_auth package
       // For now, simulate availability on non-web platforms
       if (kIsWeb) return false;
-      
+
       // Simulate that biometrics are available on mobile platforms
       await Future.delayed(const Duration(milliseconds: 100));
       return true;
@@ -54,10 +48,10 @@ class BiometricService {
 
       // Mock implementation - simulate user authentication
       AppLogger.info('Mock biometric authentication requested: $reason');
-      
+
       // Simulate authentication delay
       await Future.delayed(const Duration(seconds: 1));
-        // For demo purposes, always return true
+      // For demo purposes, always return true
       // In production, this would use the local_auth package
       const bool didAuthenticate = true;
 
@@ -87,7 +81,7 @@ class BiometricService {
     if (biometrics.isEmpty) return 'No biometric authentication available';
 
     final List<String> descriptions = [];
-    
+
     if (biometrics.contains(MockBiometricType.face)) {
       descriptions.add('Face ID');
     }
@@ -106,8 +100,9 @@ class BiometricService {
 
     if (descriptions.isEmpty) return 'Biometric authentication';
     if (descriptions.length == 1) return descriptions.first;
-    if (descriptions.length == 2) return '${descriptions[0]} or ${descriptions[1]}';
-    
+    if (descriptions.length == 2)
+      return '${descriptions[0]} or ${descriptions[1]}';
+
     return '${descriptions.sublist(0, descriptions.length - 1).join(', ')}, or ${descriptions.last}';
   }
 
@@ -126,9 +121,9 @@ class BiometricService {
   }) async {
     final String action = isClockIn ? 'clock in' : 'clock out';
     final String name = workerName ?? 'worker';
-    
+
     final String reason = 'Verify your identity to $action as $name';
-    
+
     return await authenticateWithBiometrics(
       reason: reason,
       fallbackToDeviceCredentials: true,
@@ -138,8 +133,9 @@ class BiometricService {
   /// Show biometric setup information
   static Future<Map<String, dynamic>> getBiometricInfo() async {
     final bool isAvailable = await isBiometricAvailable();
-    final List<MockBiometricType> availableBiometrics = await getAvailableBiometrics();
-    
+    final List<MockBiometricType> availableBiometrics =
+        await getAvailableBiometrics();
+
     return {
       'isAvailable': isAvailable,
       'availableBiometrics': availableBiometrics,

@@ -9,10 +9,8 @@ class TeamService {
   /// Get all teams (for managers to see all teams in the organization)
   Future<List<TeamModel>> getAllTeams() async {
     try {
-      final snapshot = await _firestore
-          .collection('teams')
-          .orderBy('name')
-          .get();
+      final snapshot =
+          await _firestore.collection('teams').orderBy('name').get();
 
       return snapshot.docs
           .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
@@ -26,12 +24,13 @@ class TeamService {
   /// Get all teams for a manager
   Future<List<TeamModel>> getManagerTeams(String managerId) async {
     try {
-      final snapshot = await _firestore
-          .collection('teams')
-          .where('managerId', isEqualTo: managerId)
-          .where('isActive', isEqualTo: true)
-          .orderBy('name')
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('teams')
+              .where('managerId', isEqualTo: managerId)
+              .where('isActive', isEqualTo: true)
+              .orderBy('name')
+              .get();
 
       return snapshot.docs
           .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
@@ -59,12 +58,13 @@ class TeamService {
   /// Get worker's team
   Future<TeamModel?> getWorkerTeam(String workerId) async {
     try {
-      final snapshot = await _firestore
-          .collection('teams')
-          .where('memberIds', arrayContains: workerId)
-          .where('isActive', isEqualTo: true)
-          .limit(1)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('teams')
+              .where('memberIds', arrayContains: workerId)
+              .where('isActive', isEqualTo: true)
+              .limit(1)
+              .get();
 
       if (snapshot.docs.isNotEmpty) {
         final doc = snapshot.docs.first;
@@ -92,10 +92,7 @@ class TeamService {
   /// Update team
   Future<bool> updateTeam(TeamModel team) async {
     try {
-      await _firestore
-          .collection('teams')
-          .doc(team.id)
-          .update(team.toMap());
+      await _firestore.collection('teams').doc(team.id).update(team.toMap());
       AppLogger.success('Team updated successfully: ${team.name}');
       return true;
     } catch (e) {
@@ -153,10 +150,11 @@ class TeamService {
   /// Remove worker from all teams (helper method)
   Future<void> removeWorkerFromAllTeams(String workerId) async {
     try {
-      final snapshot = await _firestore
-          .collection('teams')
-          .where('memberIds', arrayContains: workerId)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('teams')
+              .where('memberIds', arrayContains: workerId)
+              .get();
 
       for (final doc in snapshot.docs) {
         await doc.reference.update({
@@ -177,7 +175,8 @@ class TeamService {
 
       final List<UserModel> members = [];
       for (final memberId in team.memberIds) {
-        final userDoc = await _firestore.collection('users').doc(memberId).get();
+        final userDoc =
+            await _firestore.collection('users').doc(memberId).get();
         if (userDoc.exists) {
           members.add(UserModel.fromMap(userDoc.data()!, userDoc.id));
         }
@@ -193,15 +192,17 @@ class TeamService {
   /// Get unassigned workers
   Future<List<UserModel>> getUnassignedWorkers() async {
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .where('role', isEqualTo: 'worker')
-          .where('isActive', isEqualTo: true)
-          .get();
+      final snapshot =
+          await _firestore
+              .collection('users')
+              .where('role', isEqualTo: 'worker')
+              .where('isActive', isEqualTo: true)
+              .get();
 
-      List<UserModel> allWorkers = snapshot.docs
-          .map((doc) => UserModel.fromMap(doc.data(), doc.id))
-          .toList();
+      List<UserModel> allWorkers =
+          snapshot.docs
+              .map((doc) => UserModel.fromMap(doc.data(), doc.id))
+              .toList();
 
       // Filter out workers who are already in teams
       List<UserModel> unassigned = [];
@@ -247,9 +248,12 @@ class TeamService {
         .where('isActive', isEqualTo: true)
         .orderBy('name')
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
-            .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs
+                  .map((doc) => TeamModel.fromMap(doc.data(), doc.id))
+                  .toList(),
+        );
   }
 
   /// Get team statistics
@@ -263,18 +267,20 @@ class TeamService {
 
       // Calculate today's attendance for team
       final today = DateTime.now();
-      final todayString = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+      final todayString =
+          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
       int clockedInToday = 0;
       for (final member in members) {
-        final attendanceSnapshot = await _firestore
-            .collection('attendance')
-            .doc(member.uid)
-            .collection('records')
-            .where('date', isEqualTo: todayString)
-            .where('clockOut', isNull: true)
-            .limit(1)
-            .get();
+        final attendanceSnapshot =
+            await _firestore
+                .collection('attendance')
+                .doc(member.uid)
+                .collection('records')
+                .where('date', isEqualTo: todayString)
+                .where('clockOut', isNull: true)
+                .limit(1)
+                .get();
 
         if (attendanceSnapshot.docs.isNotEmpty) {
           clockedInToday++;
@@ -285,9 +291,10 @@ class TeamService {
         'totalMembers': members.length,
         'activeMembers': activeMembers,
         'clockedInToday': clockedInToday,
-        'attendanceRate': members.isNotEmpty 
-            ? (clockedInToday / members.length * 100).round()
-            : 0,
+        'attendanceRate':
+            members.isNotEmpty
+                ? (clockedInToday / members.length * 100).round()
+                : 0,
       };
     } catch (e) {
       AppLogger.error('Error calculating team stats: $e');

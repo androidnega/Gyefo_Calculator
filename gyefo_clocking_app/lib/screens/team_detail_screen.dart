@@ -34,7 +34,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
 
   Future<void> _loadTeamDetails() async {
     setState(() => _isLoading = true);
-    
+
     try {
       // Load team members
       final members = <UserModel>[];
@@ -44,13 +44,13 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
           members.add(user);
         }
       }
-      
+
       // Load assigned shift
       ShiftModel? shift;
       if (widget.team.shiftId != null) {
         shift = await _shiftService.getShiftById(widget.team.shiftId!);
       }
-      
+
       setState(() {
         _teamMembers = members;
         _assignedShift = shift;
@@ -65,89 +65,95 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
   Future<void> _showAddMemberDialog() async {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.person_add),
-            SizedBox(width: 8),
-            Text('Add Team Member'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'This feature allows managers to add workers to teams.',
+      builder:
+          (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.person_add),
+                SizedBox(width: 8),
+                Text('Add Team Member'),
+              ],
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Coming Soon:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '• Search and select available workers\n'
-                    '• Bulk member assignment\n'
-                    '• Role-based team permissions\n'
-                    '• Integration with worker profiles',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // For now, just show that the feature is planned
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Team member management coming in next update!'),
-                  backgroundColor: Colors.blue,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'This feature allows managers to add workers to teams.',
                 ),
-              );
-            },
-            child: const Text('OK'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Coming Soon:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        '• Search and select available workers\n'
+                        '• Bulk member assignment\n'
+                        '• Role-based team permissions\n'
+                        '• Integration with worker profiles',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  // For now, just show that the feature is planned
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Team member management coming in next update!',
+                      ),
+                      backgroundColor: Colors.blue,
+                    ),
+                  );
+                },
+                child: const Text('OK'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   Future<void> _removeMemberFromTeam(UserModel member) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Member'),
-        content: Text('Remove ${member.name} from the team?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Remove Member'),
+            content: Text('Remove ${member.name} from the team?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('Remove'),
+              ),
+            ],
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
     );
 
     if (confirmed == true) {
@@ -183,14 +189,15 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
         title: Text(widget.team.name),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),            onPressed: () async {
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
               final navigator = Navigator.of(context);
               final result = await navigator.push(
                 MaterialPageRoute(
                   builder: (context) => TeamFormScreen(team: widget.team),
                 ),
               );
-              
+
               if (result == true && mounted) {
                 // Refresh the team data and notify parent
                 navigator.pop(true);
@@ -200,23 +207,24 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildTeamInfoCard(),
-                  const SizedBox(height: 16),
-                  if (_assignedShift != null) ...[
-                    _buildShiftInfoCard(),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTeamInfoCard(),
                     const SizedBox(height: 16),
+                    if (_assignedShift != null) ...[
+                      _buildShiftInfoCard(),
+                      const SizedBox(height: 16),
+                    ],
+                    _buildMembersCard(),
                   ],
-                  _buildMembersCard(),
-                ],
+                ),
               ),
-            ),
     );
   }
 
@@ -234,8 +242,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                 Text(
                   'Team Information',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -243,7 +251,11 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
             _buildInfoRow(Icons.label, 'Name', widget.team.name),
             if (widget.team.description != null) ...[
               const SizedBox(height: 8),
-              _buildInfoRow(Icons.description, 'Description', widget.team.description!),
+              _buildInfoRow(
+                Icons.description,
+                'Description',
+                widget.team.description!,
+              ),
             ],
             const SizedBox(height: 8),
             _buildInfoRow(
@@ -278,8 +290,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                 Text(
                   'Assigned Shift',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -295,7 +307,9 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
             _buildInfoRow(
               Icons.calendar_today,
               'Working Days',
-              _assignedShift!.workDays.map((day) => _getDayName(day)).join(', '),
+              _assignedShift!.workDays
+                  .map((day) => _getDayName(day))
+                  .join(', '),
             ),
           ],
         ),
@@ -317,12 +331,13 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                 Text(
                   'Team Members (${_teamMembers.length})',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.person_add),                  onPressed: () {
+                  icon: const Icon(Icons.person_add),
+                  onPressed: () {
                     _showAddMemberDialog();
                   },
                   tooltip: 'Add Member',
@@ -384,7 +399,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
   }
 
   Widget _buildMemberTile(UserModel member) {
-    return ListTile(      leading: CircleAvatar(
+    return ListTile(
+      leading: CircleAvatar(
         backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         child: Text(
           '${member.name[0]}${member.name.split(' ').length > 1 ? member.name.split(' ')[1][0] : ''}',
@@ -393,7 +409,8 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-      ),      title: Text(member.name),
+      ),
+      title: Text(member.name),
       subtitle: Text(member.email ?? 'No email'),
       trailing: PopupMenuButton<String>(
         onSelected: (value) {
@@ -403,23 +420,32 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
               break;
           }
         },
-        itemBuilder: (context) => [
-          const PopupMenuItem(
-            value: 'remove',
-            child: Row(
-              children: [
-                Icon(Icons.person_remove, size: 20, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Remove from team', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          ),
-        ],
+        itemBuilder:
+            (context) => [
+              const PopupMenuItem(
+                value: 'remove',
+                child: Row(
+                  children: [
+                    Icon(Icons.person_remove, size: 20, color: Colors.red),
+                    SizedBox(width: 8),
+                    Text(
+                      'Remove from team',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ],
+                ),
+              ),
+            ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _buildInfoRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -428,18 +454,18 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
         Text(
           '$label:',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
+            fontWeight: FontWeight.w500,
+            color: Colors.grey[700],
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             value,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: valueColor ?? Colors.grey[800],
-                  fontWeight: valueColor != null ? FontWeight.w500 : null,
-                ),
+              color: valueColor ?? Colors.grey[800],
+              fontWeight: valueColor != null ? FontWeight.w500 : null,
+            ),
           ),
         ),
       ],
@@ -454,7 +480,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     return days[day - 1];
   }

@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/services/attendance_analytics_service.dart';
-import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/firestore_service.dart';
 import 'package:intl/intl.dart';
 
 class FlaggedAttendanceScreen extends StatefulWidget {
   final String? teamId;
-  
+
   const FlaggedAttendanceScreen({super.key, this.teamId});
 
   @override
-  State<FlaggedAttendanceScreen> createState() => _FlaggedAttendanceScreenState();
+  State<FlaggedAttendanceScreen> createState() =>
+      _FlaggedAttendanceScreenState();
 }
 
 class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
-  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
-  final AuthService _authService = AuthService();
-  
+  final AttendanceAnalyticsService _analyticsService =
+      AttendanceAnalyticsService();
+
   List<AttendanceModel> _flaggedRecords = [];
   bool _isLoading = true;
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 30));
@@ -34,7 +35,7 @@ class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
 
   Future<void> _loadFlaggedRecords() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final records = await _analyticsService.getFlaggedRecords(
         teamId: widget.teamId,
@@ -46,17 +47,20 @@ class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
       // Apply status filter
       List<AttendanceModel> filteredRecords = records;
       if (_filterStatus != 'all') {
-        filteredRecords = records.where((record) {
-          if (_filterStatus == 'pending') {
-            return record.justification == null || 
-                   record.justification!.status == JustificationStatus.pending;
-          } else if (_filterStatus == 'approved') {
-            return record.justification?.status == JustificationStatus.approved;
-          } else if (_filterStatus == 'rejected') {
-            return record.justification?.status == JustificationStatus.rejected;
-          }
-          return true;
-        }).toList();
+        filteredRecords =
+            records.where((record) {
+              if (_filterStatus == 'pending') {
+                return record.justification == null ||
+                    record.justification!.status == JustificationStatus.pending;
+              } else if (_filterStatus == 'approved') {
+                return record.justification?.status ==
+                    JustificationStatus.approved;
+              } else if (_filterStatus == 'rejected') {
+                return record.justification?.status ==
+                    JustificationStatus.rejected;
+              }
+              return true;
+            }).toList();
       }
 
       setState(() {
@@ -89,11 +93,12 @@ class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => JustificationDialog(
-        record: record,
-        workerName: workerName ?? 'Unknown Worker',
-        onUpdate: () => _loadFlaggedRecords(),
-      ),
+      builder:
+          (context) => JustificationDialog(
+            record: record,
+            workerName: workerName ?? 'Unknown Worker',
+            onUpdate: () => _loadFlaggedRecords(),
+          ),
     );
   }
 
@@ -179,25 +184,26 @@ class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
           ),
           // Records list
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _flaggedRecords.isEmpty
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _flaggedRecords.isEmpty
                     ? const Center(
-                        child: Text(
-                          'No flagged records found',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: _flaggedRecords.length,
-                        itemBuilder: (context, index) {
-                          final record = _flaggedRecords[index];
-                          return FlaggedAttendanceCard(
-                            record: record,
-                            onTap: () => _showJustificationDialog(record),
-                          );
-                        },
+                      child: Text(
+                        'No flagged records found',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
+                    )
+                    : ListView.builder(
+                      itemCount: _flaggedRecords.length,
+                      itemBuilder: (context, index) {
+                        final record = _flaggedRecords[index];
+                        return FlaggedAttendanceCard(
+                          record: record,
+                          onTap: () => _showJustificationDialog(record),
+                        );
+                      },
+                    ),
           ),
         ],
       ),
@@ -207,13 +213,14 @@ class _FlaggedAttendanceScreenState extends State<FlaggedAttendanceScreen> {
   void _showFilterDialog() {
     showDialog(
       context: context,
-      builder: (context) => FilterDialog(
-        selectedFlags: _selectedFlags,
-        onApply: (flags) {
-          setState(() => _selectedFlags = flags);
-          _loadFlaggedRecords();
-        },
-      ),
+      builder:
+          (context) => FilterDialog(
+            selectedFlags: _selectedFlags,
+            onApply: (flags) {
+              setState(() => _selectedFlags = flags);
+              _loadFlaggedRecords();
+            },
+          ),
     );
   }
 }
@@ -254,14 +261,20 @@ class FlaggedAttendanceCard extends StatelessWidget {
             const SizedBox(height: 4),
             Wrap(
               spacing: 4,
-              children: record.flags.map((flag) => Chip(
-                label: Text(
-                  flag.toString().split('.').last,
-                  style: const TextStyle(fontSize: 10),
-                ),
-                backgroundColor: _getFlagColor(flag),
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              )).toList(),
+              children:
+                  record.flags
+                      .map(
+                        (flag) => Chip(
+                          label: Text(
+                            flag.toString().split('.').last,
+                            style: const TextStyle(fontSize: 10),
+                          ),
+                          backgroundColor: _getFlagColor(flag),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      )
+                      .toList(),
             ),
             const SizedBox(height: 4),
             Text(
@@ -292,12 +305,14 @@ class FlaggedAttendanceCard extends StatelessWidget {
               record.justification != null
                   ? _getJustificationIcon(record.justification!.status)
                   : Icons.warning,
-              color: record.justification != null
-                  ? _getJustificationColor(record.justification!.status)
-                  : Colors.orange,
+              color:
+                  record.justification != null
+                      ? _getJustificationColor(record.justification!.status)
+                      : Colors.orange,
             ),
             Text(
-              record.justification?.status.toString().split('.').last ?? 'Pending',
+              record.justification?.status.toString().split('.').last ??
+                  'Pending',
               style: const TextStyle(fontSize: 10),
             ),
           ],
@@ -391,21 +406,22 @@ class _FilterDialogState extends State<FilterDialog> {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: AttendanceFlag.values.map((flag) {
-            return CheckboxListTile(
-              title: Text(flag.toString().split('.').last),
-              value: _tempSelectedFlags.contains(flag),
-              onChanged: (bool? value) {
-                setState(() {
-                  if (value == true) {
-                    _tempSelectedFlags.add(flag);
-                  } else {
-                    _tempSelectedFlags.remove(flag);
-                  }
-                });
-              },
-            );
-          }).toList(),
+          children:
+              AttendanceFlag.values.map((flag) {
+                return CheckboxListTile(
+                  title: Text(flag.toString().split('.').last),
+                  value: _tempSelectedFlags.contains(flag),
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value == true) {
+                        _tempSelectedFlags.add(flag);
+                      } else {
+                        _tempSelectedFlags.remove(flag);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
         ),
       ),
       actions: [
@@ -448,8 +464,8 @@ class JustificationDialog extends StatefulWidget {
 }
 
 class _JustificationDialogState extends State<JustificationDialog> {
-  final AttendanceAnalyticsService _analyticsService = AttendanceAnalyticsService();
-  final AuthService _authService = AuthService();
+  final AttendanceAnalyticsService _analyticsService =
+      AttendanceAnalyticsService();
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _rejectionController = TextEditingController();
   bool _isLoading = false;
@@ -457,7 +473,7 @@ class _JustificationDialogState extends State<JustificationDialog> {
   @override
   Widget build(BuildContext context) {
     final record = widget.record;
-    
+
     return AlertDialog(
       title: Text('Attendance Details - ${widget.workerName}'),
       content: SingleChildScrollView(
@@ -466,34 +482,51 @@ class _JustificationDialogState extends State<JustificationDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Basic info
-            _buildInfoRow('Date', DateFormat('MMM dd, yyyy').format(record.clockIn)),
-            _buildInfoRow('Clock-in', DateFormat('HH:mm').format(record.clockIn)),
+            _buildInfoRow(
+              'Date',
+              DateFormat('MMM dd, yyyy').format(record.clockIn),
+            ),
+            _buildInfoRow(
+              'Clock-in',
+              DateFormat('HH:mm').format(record.clockIn),
+            ),
             if (record.clockOut != null)
-              _buildInfoRow('Clock-out', DateFormat('HH:mm').format(record.clockOut!)),
+              _buildInfoRow(
+                'Clock-out',
+                DateFormat('HH:mm').format(record.clockOut!),
+              ),
             _buildInfoRow('Work Duration', record.workDurationFormatted),
             if (record.isLate)
               _buildInfoRow('Lateness', record.latenessFormatted),
             if (record.hasOvertime)
               _buildInfoRow('Overtime', record.overtimeFormatted),
-            
+
             const SizedBox(height: 16),
-            
+
             // Flags
             const Text('Flags:', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 4,
-              children: record.flags.map((flag) => Chip(
-                label: Text(flag.toString().split('.').last),
-                backgroundColor: Colors.orange.withValues(alpha: 0.3),
-              )).toList(),
+              children:
+                  record.flags
+                      .map(
+                        (flag) => Chip(
+                          label: Text(flag.toString().split('.').last),
+                          backgroundColor: Colors.orange.withValues(alpha: 0.3),
+                        ),
+                      )
+                      .toList(),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Justification section
             if (record.justification != null) ...[
-              const Text('Justification:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Justification:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -509,66 +542,89 @@ class _JustificationDialogState extends State<JustificationDialog> {
                     Text(
                       'Status: ${record.justification!.status.toString().split('.').last}',
                       style: TextStyle(
-                        color: record.justification!.status == JustificationStatus.approved
-                            ? Colors.green
-                            : record.justification!.status == JustificationStatus.rejected
+                        color:
+                            record.justification!.status ==
+                                    JustificationStatus.approved
+                                ? Colors.green
+                                : record.justification!.status ==
+                                    JustificationStatus.rejected
                                 ? Colors.red
                                 : Colors.orange,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     if (record.justification!.approvedByManagerName != null)
-                      Text('Processed by: ${record.justification!.approvedByManagerName}'),
+                      Text(
+                        'Processed by: ${record.justification!.approvedByManagerName}',
+                      ),
                     if (record.justification!.rejectionReason != null)
-                      Text('Rejection reason: ${record.justification!.rejectionReason}'),
+                      Text(
+                        'Rejection reason: ${record.justification!.rejectionReason}',
+                      ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
             ],
-            
+
             // Comments section
             if (record.justification?.comments.isNotEmpty == true) ...[
-              const Text('Comments:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Comments:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
-              ...record.justification!.comments.map((comment) => Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+              ...record.justification!.comments.map(
+                (comment) => Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            comment.authorName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '(${comment.authorRole})',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            DateFormat(
+                              'MMM dd, HH:mm',
+                            ).format(comment.timestamp),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(comment.comment),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          comment.authorName,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '(${comment.authorRole})',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                        const Spacer(),
-                        Text(
-                          DateFormat('MMM dd, HH:mm').format(comment.timestamp),
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(comment.comment),
-                  ],
-                ),
-              )),
+              ),
               const SizedBox(height: 16),
             ],
-            
+
             // Add comment section
-            const Text('Add Comment:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+              'Add Comment:',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: _commentController,
@@ -626,18 +682,18 @@ class _JustificationDialogState extends State<JustificationDialog> {
 
   Future<void> _addComment() async {
     if (_commentController.text.trim().isEmpty) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
-      final currentUser = _authService.currentUser;
+      final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) throw Exception('Not authenticated');
-      
+
       final userData = await FirestoreService.getUserData(currentUser.uid);
       if (userData == null) throw Exception('User data not found');
-      
+
       final user = UserModel.fromMap(userData, currentUser.uid);
-      
+
       await _analyticsService.addComment(
         workerId: widget.record.workerId,
         recordId: '', // We need to implement a way to get the record ID
@@ -646,10 +702,10 @@ class _JustificationDialogState extends State<JustificationDialog> {
         authorName: user.name,
         authorRole: user.role,
       );
-      
+
       _commentController.clear();
       widget.onUpdate();
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -658,9 +714,9 @@ class _JustificationDialogState extends State<JustificationDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding comment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error adding comment: $e')));
       }
     } finally {
       setState(() => _isLoading = false);
@@ -670,45 +726,46 @@ class _JustificationDialogState extends State<JustificationDialog> {
   void _showRejectDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reject Justification'),
-        content: TextField(
-          controller: _rejectionController,
-          decoration: const InputDecoration(
-            hintText: 'Enter rejection reason...',
-            border: OutlineInputBorder(),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Reject Justification'),
+            content: TextField(
+              controller: _rejectionController,
+              decoration: const InputDecoration(
+                hintText: 'Enter rejection reason...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _processJustification(false);
+                },
+                child: const Text('Reject'),
+              ),
+            ],
           ),
-          maxLines: 3,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _processJustification(false);
-            },
-            child: const Text('Reject'),
-          ),
-        ],
-      ),
     );
   }
 
   Future<void> _processJustification(bool approved) async {
     setState(() => _isLoading = true);
-    
+
     try {
-      final currentUser = _authService.currentUser;
+      final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) throw Exception('Not authenticated');
-      
+
       final userData = await FirestoreService.getUserData(currentUser.uid);
       if (userData == null) throw Exception('User data not found');
-      
+
       final user = UserModel.fromMap(userData, currentUser.uid);
-      
+
       await _analyticsService.processJustification(
         workerId: widget.record.workerId,
         recordId: '', // We need to implement a way to get the record ID
@@ -717,9 +774,9 @@ class _JustificationDialogState extends State<JustificationDialog> {
         managerName: user.name,
         rejectionReason: approved ? null : _rejectionController.text.trim(),
       );
-      
+
       widget.onUpdate();
-      
+
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
