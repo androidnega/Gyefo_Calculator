@@ -1,12 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
-import 'firebase_options.dart';
+import 'lib/config/firebase_options_secure.dart';
 
 // Quick diagnostic tool to check teams in database
 void main() async {
   // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: SecureFirebaseOptions.currentPlatform);
 
   final firestore = FirebaseFirestore.instance;
 

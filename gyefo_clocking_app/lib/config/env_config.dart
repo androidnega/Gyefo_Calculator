@@ -126,11 +126,11 @@ class EnvConfig {
   static bool validateConfig() {
     final missingKeys = <String>[];
 
-    // Check critical Firebase keys
-    if (firebaseProjectId.isEmpty) missingKeys.add('FIREBASE_PROJECT_ID');
+    // Check critical Firebase keys    if (firebaseProjectId.isEmpty) missingKeys.add('FIREBASE_PROJECT_ID');
     if (firebaseApiKeyWeb.isEmpty) missingKeys.add('FIREBASE_API_KEY_WEB');
-    if (firebaseApiKeyAndroid.isEmpty)
+    if (firebaseApiKeyAndroid.isEmpty) {
       missingKeys.add('FIREBASE_API_KEY_ANDROID');
+    }
     if (firebaseApiKeyIos.isEmpty) missingKeys.add('FIREBASE_API_KEY_IOS');
 
     if (missingKeys.isNotEmpty) {

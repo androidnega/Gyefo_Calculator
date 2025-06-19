@@ -1,12 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'dart:developer' as developer;
-import 'firebase_options.dart';
+import 'lib/config/firebase_options_secure.dart';
 
 /// Script to set up the default work zone in Firestore
 /// Run this once to create the zone configuration
 Future<void> main() async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: SecureFirebaseOptions.currentPlatform);
 
   final firestore = FirebaseFirestore.instance;
 

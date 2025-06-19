@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
-import 'package:gyefo_clocking_app/firebase_options.dart';
+import 'package:gyefo_clocking_app/config/firebase_options_secure.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
 
 void main() {
   group('Attendance Service Tests', () {
     setUpAll(() async {
       await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
+        options: SecureFirebaseOptions.currentPlatform,
       );
     });
 

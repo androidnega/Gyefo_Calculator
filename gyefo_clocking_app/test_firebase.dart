@@ -1,6 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
-import 'firebase_options.dart';
+import 'lib/config/firebase_options_secure.dart';
 import 'lib/services/firebase_test.dart';
 
 void main() async {
@@ -9,7 +9,7 @@ void main() async {
   try {
     // Initialize Firebase
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: SecureFirebaseOptions.currentPlatform,
     );
 
     // Run the test
