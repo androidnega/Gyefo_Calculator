@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/preferences_service.dart';
 import 'package:gyefo_clocking_app/services/firestore_service.dart';
+import 'package:gyefo_clocking_app/services/session_manager.dart';
 import 'package:gyefo_clocking_app/utils/app_theme.dart';
 import 'package:gyefo_clocking_app/screens/manager_dashboard.dart';
 import 'package:gyefo_clocking_app/screens/worker_dashboard.dart';
@@ -34,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen>
     super.initState();
     _setupAnimations();
     _loadSavedCredentials();
+    _checkExpiredSession();
     _startAnimations();
   }
 
@@ -95,6 +97,21 @@ class _LoginScreenState extends State<LoginScreen>
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkExpiredSession() async {
+    // Check if user came here due to session expiration
+    // The SessionManager automatically handles boot time checks
+    // and clears expired sessions when initialized
+    try {
+      final sessionManager = SessionManager();
+      // Initialize to trigger boot time checks
+      await sessionManager.initialize();
+      sessionManager.dispose(); // Clean up since this is just a check
+    } catch (e) {
+      // Silently handle any errors during session check
+      debugPrint('Session check error: $e');
+    }
   }
 
   Future<void> _signIn() async {

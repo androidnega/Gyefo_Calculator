@@ -262,7 +262,9 @@ class _AdminMessageLogScreenState extends State<AdminMessageLogScreen> {
                   decoration: BoxDecoration(
                     color: statusColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: statusColor.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Text(
                     statusText,
@@ -288,10 +290,7 @@ class _AdminMessageLogScreenState extends State<AdminMessageLogScreen> {
               ),
               child: Text(
                 message,
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.4,
-                ),
+                style: const TextStyle(fontSize: 14, height: 1.4),
               ),
             ),
 

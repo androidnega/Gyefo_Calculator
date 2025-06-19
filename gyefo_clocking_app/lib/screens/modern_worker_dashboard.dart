@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gyefo_clocking_app/utils/app_theme.dart';
-import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
 import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
 import 'package:gyefo_clocking_app/screens/worker_attendance_detail_screen.dart';
@@ -9,6 +8,7 @@ import 'package:gyefo_clocking_app/screens/worker_flagged_records_screen.dart';
 import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
 import 'package:gyefo_clocking_app/screens/messages_screen.dart';
 import 'package:gyefo_clocking_app/services/message_service.dart';
+import 'package:gyefo_clocking_app/mixins/session_aware_mixin.dart';
 
 class ModernWorkerDashboard extends StatefulWidget {
   final OfflineSyncService? offlineSyncService;
@@ -20,7 +20,7 @@ class ModernWorkerDashboard extends StatefulWidget {
 }
 
 class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, SessionAwareMixin {
   late AnimationController _fadeController;
   late AnimationController _pulseController;
   late TabController _tabController;
@@ -66,6 +66,7 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
   void _startAnimations() {
     _fadeController.forward();
   }
+
   @override
   void dispose() {
     _fadeController.dispose();
@@ -275,7 +276,11 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
 
   Future<void> _signOut() async {
     try {
-      await AuthService().signOut();
+      // Show logout confirmation dialog
+      final confirmed = await showLogoutConfirmation();
+      if (!confirmed) return;
+
+      // Session cleanup is handled by the dialog
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -547,133 +552,138 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.lightGrey,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppTheme.surfaceWhite,
-        title: Text(
-          'Dashboard',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textDark,
+    return GestureDetector(
+      onTap: extendSession,
+      onPanUpdate: (_) => extendSession(),
+      onScaleUpdate: (_) => extendSession(),
+      child: Scaffold(
+        backgroundColor: AppTheme.lightGrey,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppTheme.surfaceWhite,
+          title: Text(
+            'Dashboard',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+            ),
           ),
-        ),        actions: [
-          StreamBuilder<int>(
-            stream: MessageService.getUnreadMessageCount(),
-            builder: (context, snapshot) {
-              final unreadCount = snapshot.data ?? 0;
-              return Stack(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      _tabController.animateTo(1);
-                    },
-                    icon: const Icon(Icons.message, color: AppTheme.textDark),
-                  ),
-                  if (unreadCount > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          unreadCount > 99 ? '99+' : unreadCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+          actions: [
+            StreamBuilder<int>(
+              stream: MessageService.getUnreadMessageCount(),
+              builder: (context, snapshot) {
+                final unreadCount = snapshot.data ?? 0;
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        _tabController.animateTo(1);
+                      },
+                      icon: const Icon(Icons.message, color: AppTheme.textDark),
+                    ),
+                    if (unreadCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : unreadCount.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              );
-            },
-          ),
-          NotificationBell(
-            managerId: FirebaseAuth.instance.currentUser?.uid ?? '',
-          ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppTheme.textDark),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+                  ],
+                );
+              },
             ),
-            onSelected: (value) {
-              if (value == 'logout') {
-                _signOut();
-              }
-            },
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, color: AppTheme.errorRed),
-                        SizedBox(width: 12),
-                        Text('Logout'),
-                      ],
+            NotificationBell(
+              managerId: FirebaseAuth.instance.currentUser?.uid ?? '',
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: AppTheme.textDark),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                if (value == 'logout') {
+                  _signOut();
+                }
+              },
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, color: AppTheme.errorRed),
+                          SizedBox(width: 12),
+                          Text('Logout'),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+            ),
+            const SizedBox(width: 16),
+          ],
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: AppTheme.primaryGreen,
+            labelColor: AppTheme.primaryGreen,
+            unselectedLabelColor: AppTheme.textDark.withValues(alpha: 0.6),
+            tabs: const [
+              Tab(text: 'Dashboard', icon: Icon(Icons.dashboard)),
+              Tab(text: 'Messages', icon: Icon(Icons.message)),
+            ],
           ),
-          const SizedBox(width: 16),
-        ],
-        bottom: TabBar(
+        ),
+        body: TabBarView(
           controller: _tabController,
-          indicatorColor: AppTheme.primaryGreen,
-          labelColor: AppTheme.primaryGreen,
-          unselectedLabelColor: AppTheme.textDark.withValues(alpha: 0.6),
-          tabs: const [
-            Tab(text: 'Dashboard', icon: Icon(Icons.dashboard)),
-            Tab(text: 'Messages', icon: Icon(Icons.message)),
+          children: [
+            // Dashboard Tab
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Welcome Header
+                  _buildWelcomeHeader(),
+                  const SizedBox(height: 32),
+
+                  // Clock Button
+                  Center(child: _buildClockButton()),
+                  const SizedBox(height: 32),
+
+                  // Status Card
+                  _buildStatusCard(),
+                  const SizedBox(height: 16), // Shift Card
+                  _buildShiftCard(),
+                  const SizedBox(height: 24),
+
+                  // Quick Actions
+                  _buildQuickActions(),
+                ],
+              ),
+            ),
+            // Messages Tab
+            const MessagesScreen(),
           ],
         ),
-      ),      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Dashboard Tab
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Welcome Header
-                _buildWelcomeHeader(),
-                const SizedBox(height: 32),
-
-                // Clock Button
-                Center(child: _buildClockButton()),
-                const SizedBox(height: 32),
-
-                // Status Card
-                _buildStatusCard(),
-                const SizedBox(height: 16),
-
-                // Shift Card
-                _buildShiftCard(),
-                const SizedBox(height: 24),
-
-                // Quick Actions
-                _buildQuickActions(),
-              ],
-            ),
-          ),
-          // Messages Tab
-          const MessagesScreen(),
-        ],
-      ),
-    );
+      ), // Scaffold
+    ); // GestureDetector
   }
 }

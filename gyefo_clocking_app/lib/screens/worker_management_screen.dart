@@ -18,7 +18,8 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(      appBar: AppBar(
+    return Scaffold(
+      appBar: AppBar(
         title: const Text('Worker Management'),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
@@ -132,7 +133,8 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
                       },
                     );
                   },
-                ),              ),
+                ),
+              ),
             ],
           ),
         ],
@@ -205,7 +207,8 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
           onSelected:
               (value) => _handleWorkerAction(value, workerId, workerData),
           itemBuilder:
-              (context) => [                const PopupMenuItem(
+              (context) => [
+                const PopupMenuItem(
                   value: 'message',
                   child: Row(
                     children: [
@@ -297,7 +300,8 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
     String action,
     String workerId,
     Map<String, dynamic> workerData,
-  ) {    switch (action) {
+  ) {
+    switch (action) {
       case 'message':
         _showSingleMessageDialog(workerId, workerData['name']);
         break;
@@ -318,13 +322,16 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
         _deleteWorker(workerId, workerData['name']);
         break;
     }
-  }  void _showSingleMessageDialog(String workerId, String workerName) {
+  }
+
+  void _showSingleMessageDialog(String workerId, String workerName) {
     showDialog(
       context: context,
-      builder: (context) => MessageComposerModal(
-        preselectedWorkerId: workerId,
-        preselectedWorkerName: workerName,
-      ),
+      builder:
+          (context) => MessageComposerModal(
+            preselectedWorkerId: workerId,
+            preselectedWorkerName: workerName,
+          ),
     );
   }
 
@@ -332,13 +339,13 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AdminMessageLogScreen(
-          userId: workerId,
-          userName: workerName,
-        ),
+        builder:
+            (context) =>
+                AdminMessageLogScreen(userId: workerId, userName: workerName),
       ),
     );
   }
+
   Future<void> _resetWorkerPassword(String workerId, String email) async {
     showDialog(
       context: context,

@@ -39,18 +39,12 @@ class _MessagesScreenState extends State<MessagesScreen>
           indicatorColor: Colors.white,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
-          tabs: const [
-            Tab(text: 'Inbox'),
-            Tab(text: 'Archived'),
-          ],
+          tabs: const [Tab(text: 'Inbox'), Tab(text: 'Archived')],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildInboxTab(),
-          _buildArchivedTab(),
-        ],
+        children: [_buildInboxTab(), _buildArchivedTab()],
       ),
     );
   }
@@ -76,17 +70,15 @@ class _MessagesScreenState extends State<MessagesScreen>
                 const SizedBox(height: 16),
                 Text(
                   'Error loading messages',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 ),
               ],
             ),
           );
         }
 
-        final messages = snapshot.data?.docs
+        final messages =
+            snapshot.data?.docs
                 .where((doc) => doc['archived'] != true)
                 .toList() ??
             [];
@@ -113,10 +105,7 @@ class _MessagesScreenState extends State<MessagesScreen>
                 const SizedBox(height: 8),
                 Text(
                   'Messages from your manager will appear here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                 ),
               ],
             ),
@@ -129,11 +118,19 @@ class _MessagesScreenState extends State<MessagesScreen>
           itemBuilder: (context, index) {
             final message = messages[index];
             final messageData = message.data() as Map<String, dynamic>;
-            
+
             return Dismissible(
               key: Key(message.id),
-              background: _buildSwipeBackground(Colors.green, Icons.archive, 'Archive'),
-              secondaryBackground: _buildSwipeBackground(Colors.red, Icons.delete, 'Delete'),
+              background: _buildSwipeBackground(
+                Colors.green,
+                Icons.archive,
+                'Archive',
+              ),
+              secondaryBackground: _buildSwipeBackground(
+                Colors.red,
+                Icons.delete,
+                'Delete',
+              ),
               onDismissed: (direction) {
                 if (direction == DismissDirection.startToEnd) {
                   _archiveMessage(message.id);
@@ -157,7 +154,8 @@ class _MessagesScreenState extends State<MessagesScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
-        final archivedMessages = snapshot.data?.docs
+        final archivedMessages =
+            snapshot.data?.docs
                 .where((doc) => doc['archived'] == true)
                 .toList() ??
             [];
@@ -199,7 +197,11 @@ class _MessagesScreenState extends State<MessagesScreen>
     );
   }
 
-  Widget _buildMessageCard(String messageId, Map<String, dynamic> messageData, {bool isArchived = false}) {
+  Widget _buildMessageCard(
+    String messageId,
+    Map<String, dynamic> messageData, {
+    bool isArchived = false,
+  }) {
     final isRead = messageData['read'] ?? false;
     final timestamp = messageData['timestamp'] as Timestamp?;
     final senderName = messageData['senderName'] ?? 'Manager';
@@ -217,9 +219,10 @@ class _MessagesScreenState extends State<MessagesScreen>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isRead
-                  ? Colors.transparent
-                  : AppTheme.primaryGreen.withValues(alpha: 0.3),
+              color:
+                  isRead
+                      ? Colors.transparent
+                      : AppTheme.primaryGreen.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -250,7 +253,8 @@ class _MessagesScreenState extends State<MessagesScreen>
                             Text(
                               senderName,
                               style: TextStyle(
-                                fontWeight: isRead ? FontWeight.w500 : FontWeight.bold,
+                                fontWeight:
+                                    isRead ? FontWeight.w500 : FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
@@ -271,7 +275,8 @@ class _MessagesScreenState extends State<MessagesScreen>
                           style: TextStyle(
                             color: Colors.grey.shade700,
                             fontSize: 14,
-                            fontWeight: isRead ? FontWeight.normal : FontWeight.w500,
+                            fontWeight:
+                                isRead ? FontWeight.normal : FontWeight.w500,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -399,10 +404,7 @@ class _MessagesScreenState extends State<MessagesScreen>
               ),
               child: Text(
                 message,
-                style: const TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                ),
+                style: const TextStyle(fontSize: 16, height: 1.5),
               ),
             ),
             const SizedBox(height: 20),

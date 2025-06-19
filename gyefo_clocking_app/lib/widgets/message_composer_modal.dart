@@ -50,11 +50,7 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
             // Header
             Row(
               children: [
-                Icon(
-                  Icons.message,
-                  color: AppTheme.primaryGreen,
-                  size: 28,
-                ),
+                Icon(Icons.message, color: AppTheme.primaryGreen, size: 28),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -77,10 +73,7 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
             if (_isBulkMode) ...[
               const Text(
                 'Select Workers:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               Container(
@@ -90,19 +83,18 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('users')
-                      .where('role', isEqualTo: 'worker')
-                      .snapshots(),
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('users')
+                          .where('role', isEqualTo: 'worker')
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return const Center(
-                        child: Text('No workers found'),
-                      );
+                      return const Center(child: Text('No workers found'));
                     }
 
                     return ListView.builder(
@@ -111,7 +103,9 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
                         final worker = snapshot.data!.docs[index];
                         final workerId = worker.id;
                         final workerName = worker['fullName'] ?? 'Unknown';
-                        final isSelected = _selectedWorkerIds.contains(workerId);
+                        final isSelected = _selectedWorkerIds.contains(
+                          workerId,
+                        );
 
                         return CheckboxListTile(
                           title: Text(workerName),
@@ -149,11 +143,7 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
                 ),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.person,
-                      color: AppTheme.primaryGreen,
-                      size: 20,
-                    ),
+                    Icon(Icons.person, color: AppTheme.primaryGreen, size: 20),
                     const SizedBox(width: 8),
                     Text(
                       'To: ${_selectedWorkerNames.first}',
@@ -171,10 +161,7 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
             // Message Input
             const Text(
               'Message:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -212,16 +199,19 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
                       vertical: 12,
                     ),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(_isBulkMode ? 'Send to All' : 'Send Message'),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Text(_isBulkMode ? 'Send to All' : 'Send Message'),
                 ),
               ],
             ),
@@ -277,19 +267,13 @@ class _MessageComposerModalState extends State<MessageComposerModal> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppTheme.primaryGreen,
-      ),
+      SnackBar(content: Text(message), backgroundColor: AppTheme.primaryGreen),
     );
   }
 

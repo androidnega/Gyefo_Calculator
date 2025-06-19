@@ -72,19 +72,21 @@ class MessageService {
         };
 
         // Add to receiver's messages
-        final receiverMessageRef = _firestore
-            .collection('users')
-            .doc(receiverId)
-            .collection('messages')
-            .doc();
+        final receiverMessageRef =
+            _firestore
+                .collection('users')
+                .doc(receiverId)
+                .collection('messages')
+                .doc();
         batch.set(receiverMessageRef, messageData);
 
         // Add to sender's sent messages
-        final senderMessageRef = _firestore
-            .collection('users')
-            .doc(senderId)
-            .collection('sentMessages')
-            .doc();
+        final senderMessageRef =
+            _firestore
+                .collection('users')
+                .doc(senderId)
+                .collection('sentMessages')
+                .doc();
         batch.set(senderMessageRef, messageData);
       }
 
@@ -189,11 +191,16 @@ class MessageService {
 
   // Send push notification
   static Future<void> _sendPushNotification(
-      String receiverId, String senderName, String message) async {
+    String receiverId,
+    String senderName,
+    String message,
+  ) async {
     try {
       // Get receiver's FCM token from user document
-      final userDoc = await _firestore.collection('users').doc(receiverId).get();
-      final fcmToken = userDoc.data()?['fcmToken'];      if (fcmToken != null) {
+      final userDoc =
+          await _firestore.collection('users').doc(receiverId).get();
+      final fcmToken = userDoc.data()?['fcmToken'];
+      if (fcmToken != null) {
         // In a real implementation, you would use Firebase Cloud Functions
         // to send the notification. For now, we'll skip this part.
         // The notification logic would be implemented server-side.

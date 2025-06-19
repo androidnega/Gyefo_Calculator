@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../services/auth_service.dart';
 import '../services/offline_sync_service.dart';
 import '../services/backup_service.dart';
 import '../widgets/offline_sync_widgets.dart';
+import '../widgets/logout_confirmation_dialog.dart';
 import '../themes/app_themes.dart';
 
 class ManagerSettingsScreen extends StatefulWidget {
@@ -578,8 +578,11 @@ class _ManagerSettingsScreenState extends State<ManagerSettingsScreen> {
 
   Future<void> _logout() async {
     try {
-      await AuthService().signOut();
-      // Navigation will be handled automatically by the StreamBuilder in main.dart
+      // Show logout confirmation dialog
+      final confirmed = await LogoutConfirmationDialog.show(context);
+      if (confirmed != true) return;
+
+      // Session cleanup is handled by the dialog
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

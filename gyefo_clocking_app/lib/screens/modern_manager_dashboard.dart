@@ -9,9 +9,9 @@ import 'package:gyefo_clocking_app/screens/advanced_reports_screen.dart';
 import 'package:gyefo_clocking_app/screens/flagged_attendance_screen.dart';
 import 'package:gyefo_clocking_app/screens/worker_selection_for_calendar_screen.dart';
 import 'package:gyefo_clocking_app/screens/worker_management_screen.dart';
-import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
 import 'package:gyefo_clocking_app/widgets/message_composer_modal.dart';
+import 'package:gyefo_clocking_app/mixins/session_aware_mixin.dart';
 
 class ModernManagerDashboard extends StatefulWidget {
   const ModernManagerDashboard({super.key});
@@ -21,7 +21,7 @@ class ModernManagerDashboard extends StatefulWidget {
 }
 
 class _ModernManagerDashboardState extends State<ModernManagerDashboard>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, SessionAwareMixin {
   late AnimationController _fadeController;
   late AnimationController _staggerController;
   late Animation<double> _fadeAnimation;
@@ -87,7 +87,11 @@ class _ModernManagerDashboardState extends State<ModernManagerDashboard>
 
   Future<void> _signOut(BuildContext context) async {
     try {
-      await AuthService().signOut();
+      // Show logout confirmation dialog
+      final confirmed = await showLogoutConfirmation();
+      if (!confirmed) return;
+
+      // Session cleanup is handled by the dialog
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -323,276 +327,282 @@ class _ModernManagerDashboardState extends State<ModernManagerDashboard>
     final spacingLarge = isSmallScreen ? 16.0 : 24.0;
     final spacingSmall = isSmallScreen ? 8.0 : 12.0;
 
-    return Scaffold(
-      backgroundColor: AppTheme.lightGrey,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: AppTheme.surfaceWhite,
-        centerTitle: false,
-        title: Text(
-          'Dashboard',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.textDark,
-            fontSize: isSmallScreen ? 20 : 24,
-          ),
-        ),
-        actions: [
-          NotificationBell(
-            managerId: FirebaseAuth.instance.currentUser?.uid ?? '',
-          ),
-          const SizedBox(width: 8),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: AppTheme.textDark),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: extendSession,
+      onPanUpdate: (_) => extendSession(),
+      onScaleUpdate: (_) => extendSession(),
+      child: Scaffold(
+        backgroundColor: AppTheme.lightGrey,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppTheme.surfaceWhite,
+          centerTitle: false,
+          title: Text(
+            'Dashboard',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDark,
+              fontSize: isSmallScreen ? 20 : 24,
             ),
-            onSelected: (value) {
-              switch (value) {
-                case 'settings':
-                  Navigator.push(
-                    context,
-                    AppTheme.createPageRoute(
-                      const ManagerSettingsScreen(),
-                      routeName: '/settings',
-                    ),
-                  );
-                  break;
-                case 'logout':
-                  _signOut(context);
-                  break;
-              }
-            },
-            itemBuilder:
-                (context) => [
-                  const PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        Icon(Icons.settings, color: AppTheme.textDark),
-                        SizedBox(width: 12),
-                        Text('Settings'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, color: AppTheme.errorRed),
-                        SizedBox(width: 12),
-                        Text('Logout'),
-                      ],
-                    ),
-                  ),
-                ],
           ),
-          SizedBox(width: isSmallScreen ? 12 : 16),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(padding),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Welcome Header
-                  _buildWelcomeHeader(),
-                  SizedBox(height: spacingLarge),
-
-                  // Quick Actions Section
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Quick Actions',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                        fontSize: isSmallScreen ? 18 : 20,
+          actions: [
+            NotificationBell(
+              managerId: FirebaseAuth.instance.currentUser?.uid ?? '',
+            ),
+            const SizedBox(width: 8),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: AppTheme.textDark),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              onSelected: (value) {
+                switch (value) {
+                  case 'settings':
+                    Navigator.push(
+                      context,
+                      AppTheme.createPageRoute(
+                        const ManagerSettingsScreen(),
+                        routeName: '/settings',
+                      ),
+                    );
+                    break;
+                  case 'logout':
+                    _signOut(context);
+                    break;
+                }
+              },
+              itemBuilder:
+                  (context) => [
+                    const PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings, color: AppTheme.textDark),
+                          SizedBox(width: 12),
+                          Text('Settings'),
+                        ],
                       ),
                     ),
-                  ),
-                  SizedBox(height: spacingSmall),
-
-                  // Quick Actions Grid
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount:
-                        screenWidth <= 400
-                            ? 2
-                            : screenWidth <= 600
-                            ? 3
-                            : 4,
-                    crossAxisSpacing: isSmallScreen ? 8 : 12,
-                    mainAxisSpacing: isSmallScreen ? 8 : 12,
-                    childAspectRatio: isSmallScreen ? 1.2 : 1.0,
-                    children: [
-                      _buildQuickActionCard(
-                        title: 'Workers',
-                        icon: Icons.people_rounded,
-                        color: AppColors.clockInGreen,
-                        animationIndex: 0,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const WorkerManagementScreen(),
-                                routeName: '/worker-management',
-                              ),
-                            ),
-                      ),
-                      _buildQuickActionCard(
-                        title: 'Calendar',
-                        icon: Icons.calendar_today_rounded,
-                        color: AppTheme.accentOrange,
-                        animationIndex: 1,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const WorkerSelectionForCalendarScreen(),
-                                routeName: '/calendar',
-                              ),
-                            ),
-                      ),
-                      _buildQuickActionCard(
-                        title: 'Reports',
-                        icon: Icons.file_download_rounded,
-                        color: AppTheme.primaryGreen,
-                        animationIndex: 2,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const AdvancedReportsScreen(),
-                                routeName: '/reports',
-                              ),
-                            ),
-                      ),
-                      _buildQuickActionCard(
-                        title: 'Settings',
-                        icon: Icons.settings_rounded,
-                        color: AppTheme.textLight,
-                        animationIndex: 3,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const ManagerSettingsScreen(),
-                                routeName: '/settings',
-                              ),
-                            ),
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: spacingLarge),
-
-                  // Management Section
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Management',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.textDark,
-                        fontSize: isSmallScreen ? 18 : 20,
+                    const PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout, color: AppTheme.errorRed),
+                          SizedBox(width: 12),
+                          Text('Logout'),
+                        ],
                       ),
                     ),
-                  ),
-                  SizedBox(height: spacingSmall),
+                  ],
+            ),
+            SizedBox(width: isSmallScreen ? 12 : 16),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(padding),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Welcome Header
+                    _buildWelcomeHeader(),
+                    SizedBox(height: spacingLarge),
 
-                  // Management List with responsive spacing
-                  Column(
-                    children: [
-                      _buildCompactDashboardTile(
-                        title: 'Attendance Overview',
-                        subtitle: 'View and manage attendance records',
-                        icon: Icons.bar_chart_rounded,
-                        color: AppColors.clockOutBlue,
-                        animationIndex: 4,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const ManagerAttendanceScreen(),
-                                routeName: '/attendance',
-                              ),
-                            ),
+                    // Quick Actions Section
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Quick Actions',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textDark,
+                          fontSize: isSmallScreen ? 18 : 20,
+                        ),
                       ),
-                      SizedBox(height: isSmallScreen ? 6 : 8),
-                      _buildCompactDashboardTile(
-                        title: 'Flagged Events',
-                        subtitle: 'Review attendance issues and justifications',
-                        icon: Icons.flag_rounded,
-                        color: AppColors.flaggedRed,
-                        animationIndex: 5,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const FlaggedAttendanceScreen(),
-                                routeName: '/flagged',
+                    ),
+                    SizedBox(height: spacingSmall),
+
+                    // Quick Actions Grid
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount:
+                          screenWidth <= 400
+                              ? 2
+                              : screenWidth <= 600
+                              ? 3
+                              : 4,
+                      crossAxisSpacing: isSmallScreen ? 8 : 12,
+                      mainAxisSpacing: isSmallScreen ? 8 : 12,
+                      childAspectRatio: isSmallScreen ? 1.2 : 1.0,
+                      children: [
+                        _buildQuickActionCard(
+                          title: 'Workers',
+                          icon: Icons.people_rounded,
+                          color: AppColors.clockInGreen,
+                          animationIndex: 0,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const WorkerManagementScreen(),
+                                  routeName: '/worker-management',
+                                ),
                               ),
-                            ),
-                      ),
-                      SizedBox(height: isSmallScreen ? 6 : 8),
-                      _buildCompactDashboardTile(
-                        title: 'Shifts Management',
-                        subtitle: 'Create and assign work shifts',
-                        icon: Icons.schedule_rounded,
-                        color: AppColors.pendingOrange,
-                        animationIndex: 6,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const ShiftManagementScreen(),
-                                routeName: '/shifts',
+                        ),
+                        _buildQuickActionCard(
+                          title: 'Calendar',
+                          icon: Icons.calendar_today_rounded,
+                          color: AppTheme.accentOrange,
+                          animationIndex: 1,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const WorkerSelectionForCalendarScreen(),
+                                  routeName: '/calendar',
+                                ),
                               ),
-                            ),
-                      ),
-                      SizedBox(height: isSmallScreen ? 6 : 8),
-                      _buildCompactDashboardTile(
-                        title: 'Holiday Management',
-                        subtitle: 'Manage company holidays and leave',
-                        icon: Icons.beach_access_rounded,
-                        color: AppColors.approvedGreen,
-                        animationIndex: 7,
-                        onTap:
-                            () => Navigator.push(
-                              context,
-                              AppTheme.createPageRoute(
-                                const HolidayListScreen(),
-                                routeName: '/holidays',
+                        ),
+                        _buildQuickActionCard(
+                          title: 'Reports',
+                          icon: Icons.file_download_rounded,
+                          color: AppTheme.primaryGreen,
+                          animationIndex: 2,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const AdvancedReportsScreen(),
+                                  routeName: '/reports',
+                                ),
                               ),
-                            ),
+                        ),
+                        _buildQuickActionCard(
+                          title: 'Settings',
+                          icon: Icons.settings_rounded,
+                          color: AppTheme.textLight,
+                          animationIndex: 3,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const ManagerSettingsScreen(),
+                                  routeName: '/settings',
+                                ),
+                              ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: spacingLarge),
+
+                    // Management Section
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Management',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textDark,
+                          fontSize: isSmallScreen ? 18 : 20,
+                        ),
                       ),
-                    ],
-                  ),                  // Bottom padding for scrolling
-                  SizedBox(height: isSmallScreen ? 16 : 24),
-                ],
-              );
-            },
+                    ),
+                    SizedBox(height: spacingSmall),
+
+                    // Management List with responsive spacing
+                    Column(
+                      children: [
+                        _buildCompactDashboardTile(
+                          title: 'Attendance Overview',
+                          subtitle: 'View and manage attendance records',
+                          icon: Icons.bar_chart_rounded,
+                          color: AppColors.clockOutBlue,
+                          animationIndex: 4,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const ManagerAttendanceScreen(),
+                                  routeName: '/attendance',
+                                ),
+                              ),
+                        ),
+                        SizedBox(height: isSmallScreen ? 6 : 8),
+                        _buildCompactDashboardTile(
+                          title: 'Flagged Events',
+                          subtitle:
+                              'Review attendance issues and justifications',
+                          icon: Icons.flag_rounded,
+                          color: AppColors.flaggedRed,
+                          animationIndex: 5,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const FlaggedAttendanceScreen(),
+                                  routeName: '/flagged',
+                                ),
+                              ),
+                        ),
+                        SizedBox(height: isSmallScreen ? 6 : 8),
+                        _buildCompactDashboardTile(
+                          title: 'Shifts Management',
+                          subtitle: 'Create and assign work shifts',
+                          icon: Icons.schedule_rounded,
+                          color: AppColors.pendingOrange,
+                          animationIndex: 6,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const ShiftManagementScreen(),
+                                  routeName: '/shifts',
+                                ),
+                              ),
+                        ),
+                        SizedBox(height: isSmallScreen ? 6 : 8),
+                        _buildCompactDashboardTile(
+                          title: 'Holiday Management',
+                          subtitle: 'Manage company holidays and leave',
+                          icon: Icons.beach_access_rounded,
+                          color: AppColors.approvedGreen,
+                          animationIndex: 7,
+                          onTap:
+                              () => Navigator.push(
+                                context,
+                                AppTheme.createPageRoute(
+                                  const HolidayListScreen(),
+                                  routeName: '/holidays',
+                                ),
+                              ),
+                        ),
+                      ],
+                    ), // Bottom padding for scrolling
+                    SizedBox(height: isSmallScreen ? 16 : 24),
+                  ],
+                );
+              },
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (context) => const MessageComposerModal(),
-          );
-        },
-        backgroundColor: AppTheme.primaryGreen,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.message),
-      ),
-    );
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const MessageComposerModal(),
+            );
+          },
+          backgroundColor: AppTheme.primaryGreen,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.message),
+        ),
+      ), // Scaffold
+    ); // GestureDetector
   }
 }
