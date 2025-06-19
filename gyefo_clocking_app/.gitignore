@@ -43,3 +43,86 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# =============================================
+# SECURITY: API Keys and Configuration Files
+# =============================================
+
+# Firebase Configuration Files (CRITICAL)
+firebase_options.dart
+lib/firebase_options.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+web/firebase-config.js
+
+# Environment Files
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+*.env
+
+# API Keys and Secrets
+api_keys.dart
+secrets.dart
+config/secrets.dart
+lib/config/secrets.dart
+lib/env/
+keys/
+credentials/
+
+# Database URLs and Connection Strings
+database.dart
+db_config.dart
+
+# OAuth and Authentication Secrets
+oauth_config.dart
+auth_secrets.dart
+
+# Third-party API Keys
+google_maps_api_key.dart
+stripe_keys.dart
+payment_config.dart
+
+# Local Configuration Files
+local.properties
+local_config.dart
+
+# Certificate Files
+*.p12
+*.jks
+*.keystore
+*.pem
+*.crt
+*.key
+
+# Firebase CLI Cache
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Firebase Hosting Cache
+.firebase/hosting.*
+
+# Cloud Functions
+functions/node_modules/
+functions/.env
+functions/lib/
+
+# iOS Certificates and Provisioning Profiles
+ios/Runner/GoogleService-Info.plist
+ios/certificates/
+ios/provisioning/
+
+# Android Signing
+android/app/release/
+android/key.properties
+android/keystore/
+android/upload-keystore.jks
+
+# Temporary API Test Files
+*_api_test.dart
+api_playground.dart
+test_keys.dart
