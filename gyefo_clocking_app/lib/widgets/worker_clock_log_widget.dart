@@ -98,8 +98,8 @@ class WorkerClockLogWidget extends StatelessWidget {
                   return ListView.separated(
                     itemCount: snapshot.data!.docs.length,
                     separatorBuilder: (context, index) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final doc = snapshot.data!.docs[index];                      final attendance = AttendanceModel.fromMap(
+                    itemBuilder: (context, index) {                      final doc = snapshot.data!.docs[index];
+                      final attendance = AttendanceModel.fromMap(
                         doc.data() as Map<String, dynamic>,
                       );
                       return _buildLogEntry(context, attendance);
