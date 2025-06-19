@@ -400,6 +400,109 @@ class LocationService {
       return false;
     }
   }
+
+  /// Get the current location settings for a company
+  static Future<Map<String, dynamic>?> getLocationSettings({String? companyId}) async {
+    try {
+      final effectiveCompanyId = companyId ?? await _getCompanyId();
+      if (effectiveCompanyId == null) return null;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('companies')
+          .doc(effectiveCompanyId)
+          .collection('settings')
+          .doc('location')
+          .get();
+
+      return doc.exists ? doc.data() : null;
+    } catch (e) {
+      AppLogger.error('Error getting location settings: $e');
+      return null;
+    }
+  }
+
+  /// Update location settings for a company
+  static Future<bool> updateLocationSettings({
+    required double officeLat,
+    required double officeLng,
+    required double allowedRadius,
+    String? companyId,
+  }) async {
+    try {
+      final effectiveCompanyId = companyId ?? await _getCompanyId();
+      if (effectiveCompanyId == null) return false;
+
+      final settingsData = {
+        'officeLat': officeLat,
+        'officeLng': officeLng,
+        'allowedRadius': allowedRadius,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedBy': 'manager',
+      };
+
+      // Update the company's location settings
+      await FirebaseFirestore.instance
+          .collection('companies')
+          .doc(effectiveCompanyId)
+          .collection('settings')
+          .doc('location')
+          .set(settingsData, SetOptions(merge: true));
+
+      // Also update the legacy zones collection for backward compatibility
+      await FirebaseFirestore.instance
+          .collection('zones')
+          .doc('default_zone')
+          .set({
+            'name': 'Office Location',
+            'latitude': officeLat,
+            'longitude': officeLng,
+            'radius': allowedRadius,
+            'isActive': true,
+            'companyId': effectiveCompanyId,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+      return true;
+    } catch (e) {
+      AppLogger.error('Error updating location settings: $e');
+      return false;
+    }
+  }
+
+  /// Get the current user's company ID
+  static Future<String?> _getCompanyId() async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc('manager_user_id') // This should be dynamic based on current user
+          .get();
+
+      return userDoc.data()?['companyId'] ?? 'default_company';
+    } catch (e) {
+      AppLogger.error('Error getting company ID: $e');
+      return 'default_company';
+    }
+  }
+
+  /// Stream location settings changes
+  static Stream<Map<String, dynamic>?> streamLocationSettings({String? companyId}) {
+    return Stream.fromFuture(_getCompanyId()).asyncExpand((effectiveCompanyId) {
+      final targetCompanyId = companyId ?? effectiveCompanyId ?? 'default_company';
+      
+      return FirebaseFirestore.instance
+          .collection('companies')
+          .doc(targetCompanyId)
+          .collection('settings')
+          .doc('location')
+          .snapshots()
+          .map((doc) => doc.exists ? doc.data() : null);
+    });
+  }
+
+  /// Validate location coordinates
+  static bool isValidLocation(double lat, double lng) {
+    return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
 }
 
 /// Result class for location validation

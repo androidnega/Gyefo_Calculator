@@ -5,6 +5,7 @@ import '../services/offline_sync_service.dart';
 import '../services/backup_service.dart';
 import '../widgets/offline_sync_widgets.dart';
 import '../widgets/logout_confirmation_dialog.dart';
+import '../screens/location_settings_screen.dart';
 import '../themes/app_themes.dart';
 
 class ManagerSettingsScreen extends StatefulWidget {
@@ -160,12 +161,17 @@ class _ManagerSettingsScreenState extends State<ManagerSettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-            ],
-
-            // Settings Options
+            ],            // Settings Options
             Card(
               child: Column(
                 children: [
+                  _buildSettingsTile(
+                    icon: Icons.location_on,
+                    title: 'Location Settings',
+                    subtitle: 'Configure geo-fence and office location',
+                    onTap: () => _openLocationSettings(context),
+                  ),
+                  const Divider(height: 1),
                   _buildSettingsTile(
                     icon: Icons.notifications,
                     title: 'Notifications',
@@ -593,6 +599,15 @@ class _ManagerSettingsScreenState extends State<ManagerSettingsScreen> {
         );
       }
     }
+  }
+
+  void _openLocationSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LocationSettingsScreen(),
+      ),
+    );
   }
 }
 

@@ -11,6 +11,7 @@ import 'package:gyefo_clocking_app/screens/worker_selection_for_calendar_screen.
 import 'package:gyefo_clocking_app/screens/worker_management_screen.dart';
 import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
 import 'package:gyefo_clocking_app/widgets/message_composer_modal.dart';
+import 'package:gyefo_clocking_app/widgets/location_settings_card.dart';
 import 'package:gyefo_clocking_app/mixins/session_aware_mixin.dart';
 
 class ModernManagerDashboard extends StatefulWidget {
@@ -402,12 +403,15 @@ class _ModernManagerDashboardState extends State<ModernManagerDashboard>
           child: SingleChildScrollView(
             padding: EdgeInsets.all(padding),
             child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Column(
+              builder: (context, constraints) {                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Welcome Header
                     _buildWelcomeHeader(),
+                    SizedBox(height: spacingLarge),
+
+                    // Location Settings Card
+                    const LocationSettingsCard(),
                     SizedBox(height: spacingLarge),
 
                     // Quick Actions Section
