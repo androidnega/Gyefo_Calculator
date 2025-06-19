@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:gyefo_clocking_app/utils/app_theme.dart';
 import 'package:gyefo_clocking_app/services/attendance_service.dart';
@@ -11,6 +12,10 @@ import 'package:gyefo_clocking_app/services/message_service.dart';
 import 'package:gyefo_clocking_app/mixins/session_aware_mixin.dart';
 import 'package:gyefo_clocking_app/widgets/live_time_widget.dart';
 import 'package:gyefo_clocking_app/services/shift_enforcement_service.dart';
+import 'package:gyefo_clocking_app/services/firestore_service.dart';
+import 'package:gyefo_clocking_app/services/shift_service.dart';
+import 'package:gyefo_clocking_app/models/user_model.dart';
+import 'package:intl/intl.dart';
 
 class ModernWorkerDashboard extends StatefulWidget {
   final OfflineSyncService? offlineSyncService;
@@ -258,10 +263,13 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
               behavior: SnackBarBehavior.floating,
             ),
           );
-        }
-      } else {
+        }      } else {
         // Clock in
         await attendanceService.clockIn(user.uid);
+        
+        // Check for lateness and show message
+        final latenessMessage = await _checkClockInLateness(user.uid);
+        
         setState(() {
           _isClockedIn = true;
           _lastClockTime = DateTime.now();
@@ -269,10 +277,11 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Successfully clocked in!'),
-              backgroundColor: AppColors.clockInGreen,
+            SnackBar(
+              content: Text(latenessMessage ?? 'Successfully clocked in!'),
+              backgroundColor: latenessMessage != null ? Colors.orange : AppColors.clockInGreen,
               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
             ),
           );
         }
@@ -568,6 +577,68 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
         ),
       ),
     );
+  }
+
+  Future<String?> _checkClockInLateness(String workerId) async {
+    try {
+      final userData = await FirestoreService.getUserData(workerId);
+      if (userData == null) return null;
+
+      final user = UserModel.fromMap(userData, workerId);
+      if (user.shiftId == null) return null;
+
+      final shift = await ShiftService().getShiftById(user.shiftId!);
+      if (shift == null) return null;
+
+      final now = DateTime.now();
+      final shiftStartTime = _parseTimeOfDay(shift.startTime);
+      final shiftStart = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        shiftStartTime.hour,
+        shiftStartTime.minute,
+      );
+
+      // Calculate lateness (beyond grace period)
+      final gracePeriodEnd = shiftStart.add(Duration(minutes: shift.gracePeriodMinutes));
+      
+      if (now.isAfter(gracePeriodEnd)) {
+        final minutesLate = now.difference(gracePeriodEnd).inMinutes;
+        return 'Successfully clocked in! You clocked in $minutesLate minutes late.';
+      } else if (now.isAfter(shiftStart)) {
+        // Within grace period
+        return 'Successfully clocked in! You clocked in within your grace period.';
+      } else {
+        // Early clock-in
+        return 'Successfully clocked in! You clocked in early.';
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error checking lateness: $e');
+      }
+      return null;
+    }
+  }
+
+  TimeOfDay _parseTimeOfDay(String timeString) {
+    // Parse time format like "09:00" or "9:00 AM"
+    try {
+      if (timeString.contains('AM') || timeString.contains('PM')) {
+        final format = DateFormat('h:mm a');
+        final parsed = format.parse(timeString);
+        return TimeOfDay(hour: parsed.hour, minute: parsed.minute);
+      } else {
+        final parts = timeString.split(':');
+        return TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    } catch (e) {
+      // Default fallback
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:gyefo_clocking_app/models/attendance_model.dart';
 import 'package:gyefo_clocking_app/services/export_service.dart';
 import 'package:gyefo_clocking_app/models/user_model.dart';
 import 'package:gyefo_clocking_app/utils/logger.dart';
+import 'package:gyefo_clocking_app/widgets/worker_clock_log_widget.dart';
 import 'package:intl/intl.dart';
 
 class WorkerAttendanceDetailScreen extends StatefulWidget {
@@ -607,9 +608,14 @@ class _WorkerAttendanceDetailScreenState
           //   tooltip: 'Calendar View',
           // ),
         ],
-      ),
-      body: Column(
+      ),      body: Column(
         children: [
+          // Clock Logs Section
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: WorkerClockLogWidget(workerId: widget.workerId),
+          ),
+          
           // Date filter section
           if (_filterType != 'all')
             Container(
