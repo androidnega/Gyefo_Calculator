@@ -14,7 +14,7 @@ import 'package:gyefo_clocking_app/services/fcm_notification_service.dart';
 import 'package:gyefo_clocking_app/services/session_manager.dart';
 import 'package:gyefo_clocking_app/widgets/logout_confirmation_dialog.dart';
 import 'package:gyefo_clocking_app/themes/app_themes.dart';
-import 'config/firebase_options_secure.dart';
+import 'firebase_options.dart';
 
 // Import web service only for web platform
 import 'services/web_api_service.dart' if (dart.library.io) 'services/web_api_service_stub.dart';
@@ -22,17 +22,10 @@ import 'services/web_api_service.dart' if (dart.library.io) 'services/web_api_se
 void main() async {
   // Make main asynchronous
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase first using secure options
-  await Firebase.initializeApp(options: SecureFirebaseOptions.currentPlatform);
-
+    // Initialize Firebase first using default options
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // Web-specific initialization
   if (kIsWeb) {
-    // Validate web configuration
-    if (!WebApiService.validateWebConfig()) {
-      debugPrint('Warning: Web Firebase configuration incomplete');
-    }
-    
     // Load Google Maps API for web
     try {
       await WebApiService.loadGoogleMapsApi();
