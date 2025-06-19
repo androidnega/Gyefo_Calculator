@@ -1,0 +1,32 @@
+<!-- Firebase SDK for web -->
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js"></script>
+
+<script>
+  // Initialize Firebase with environment variables
+  // These will be replaced by build process from environment config
+  const firebaseConfig = {
+    apiKey: "{{FIREBASE_API_KEY_WEB}}",
+    authDomain: "{{FIREBASE_AUTH_DOMAIN}}",
+    projectId: "{{FIREBASE_PROJECT_ID}}",
+    storageBucket: "{{FIREBASE_STORAGE_BUCKET}}",
+    messagingSenderId: "{{FIREBASE_MESSAGING_SENDER_ID}}",
+    appId: "{{FIREBASE_APP_ID_WEB}}"
+  };
+
+  // Check if Firebase config is properly loaded
+  const isConfigValid = Object.values(firebaseConfig).every(value => 
+    value && !value.startsWith('{{') && !value.endsWith('}}')
+  );
+
+  if (isConfigValid) {
+    firebase.initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully for web');
+  } else {
+    console.warn('Firebase config contains placeholder values. Web features may not work properly.');
+    console.log('Config:', firebaseConfig);
+  }
+</script>

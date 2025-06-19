@@ -2,7 +2,7 @@
 // This file replaces the original firebase_options.dart with secure environment-based configuration
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, kIsWeb, TargetPlatform, debugPrint;
 import '../config/env_config.dart';
 
 /// Secure [FirebaseOptions] that uses environment variables instead of hardcoded values
@@ -41,15 +41,24 @@ class SecureFirebaseOptions {
         );
     }
   }
-
-  static FirebaseOptions get web => FirebaseOptions(
-    apiKey: EnvConfig.firebaseApiKeyWeb,
-    appId: EnvConfig.firebaseAppIdWeb,
-    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
-    projectId: EnvConfig.firebaseProjectId,
-    authDomain: EnvConfig.firebaseAuthDomain,
-    storageBucket: EnvConfig.firebaseStorageBucket,
-  );
+  static FirebaseOptions get web {
+    // Validate configuration before creating options
+    if (!EnvConfig.validateConfig()) {
+      if (kIsWeb) {
+        // For web, we can still try to initialize with whatever we have
+        debugPrint('Warning: Incomplete Firebase web configuration detected');
+      }
+    }
+    
+    return FirebaseOptions(
+      apiKey: EnvConfig.firebaseApiKeyWeb,
+      appId: EnvConfig.firebaseAppIdWeb,
+      messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+      projectId: EnvConfig.firebaseProjectId,
+      authDomain: EnvConfig.firebaseAuthDomain,
+      storageBucket: EnvConfig.firebaseStorageBucket,
+    );
+  }
 
   static FirebaseOptions get android => FirebaseOptions(
     apiKey: EnvConfig.firebaseApiKeyAndroid,

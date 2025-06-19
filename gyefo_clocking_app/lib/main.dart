@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gyefo_clocking_app/screens/loading_screen.dart';
 import 'package:gyefo_clocking_app/screens/new_login_screen.dart';
@@ -15,11 +16,30 @@ import 'package:gyefo_clocking_app/widgets/logout_confirmation_dialog.dart';
 import 'package:gyefo_clocking_app/themes/app_themes.dart';
 import 'config/firebase_options_secure.dart';
 
+// Import web service only for web platform
+import 'services/web_api_service.dart' if (dart.library.io) 'services/web_api_service_stub.dart';
+
 void main() async {
   // Make main asynchronous
   WidgetsFlutterBinding.ensureInitialized();
+  
   // Initialize Firebase first using secure options
   await Firebase.initializeApp(options: SecureFirebaseOptions.currentPlatform);
+
+  // Web-specific initialization
+  if (kIsWeb) {
+    // Validate web configuration
+    if (!WebApiService.validateWebConfig()) {
+      debugPrint('Warning: Web Firebase configuration incomplete');
+    }
+    
+    // Load Google Maps API for web
+    try {
+      await WebApiService.loadGoogleMapsApi();
+    } catch (e) {
+      debugPrint('Warning: Failed to load Google Maps API: $e');
+    }
+  }
 
   // Load saved theme preference
   await AppThemes.loadSavedTheme();
