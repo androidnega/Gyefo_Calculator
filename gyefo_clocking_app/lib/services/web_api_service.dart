@@ -1,5 +1,5 @@
-import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
 import '../config/env_config.dart';
 
 /// Web-specific service for loading external APIs
@@ -33,22 +33,22 @@ class WebApiService {
       }
 
       // Check if script element exists
-      final existingScript = html.document.getElementById('google-maps-api');
+      final existingScript = web.document.getElementById('google-maps-api');
       if (existingScript != null) {
         // Update the src if it's empty
-        final scriptElement = existingScript as html.ScriptElement;
+        final scriptElement = existingScript as web.HTMLScriptElement;
         if (scriptElement.src.isEmpty) {
           scriptElement.src = 'https://maps.googleapis.com/maps/api/js?key=$apiKey';
         }
       } else {
         // Create new script element
-        final script = html.ScriptElement()
+        final script = web.document.createElement('script') as web.HTMLScriptElement
           ..id = 'google-maps-api'
           ..src = 'https://maps.googleapis.com/maps/api/js?key=$apiKey'
           ..async = true
           ..defer = true;
 
-        html.document.head!.children.add(script);
+        web.document.head!.appendChild(script);
       }
 
       _googleMapsLoaded = true;
