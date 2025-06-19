@@ -17,17 +17,15 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    defaultConfig {
+    kotlinOptions {
+        jvmTarget = '11'
+    }    defaultConfig {
         applicationId "com.example.gyefo_clocking_app"
         minSdkVersion 23
         targetSdkVersion 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
-    }
-
-    kotlinOptions {
-        jvmTarget = '11'
     }
 
     buildTypes {

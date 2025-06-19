@@ -11,6 +11,7 @@ import 'package:gyefo_clocking_app/screens/worker_selection_for_calendar_screen.
 import 'package:gyefo_clocking_app/screens/worker_management_screen.dart';
 import 'package:gyefo_clocking_app/services/auth_service.dart';
 import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
+import 'package:gyefo_clocking_app/widgets/message_composer_modal.dart';
 
 class ModernManagerDashboard extends StatefulWidget {
   const ModernManagerDashboard({super.key});
@@ -573,15 +574,24 @@ class _ModernManagerDashboardState extends State<ModernManagerDashboard>
                             ),
                       ),
                     ],
-                  ),
-
-                  // Bottom padding for scrolling
+                  ),                  // Bottom padding for scrolling
                   SizedBox(height: isSmallScreen ? 16 : 24),
                 ],
               );
             },
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (context) => const MessageComposerModal(),
+          );
+        },
+        backgroundColor: AppTheme.primaryGreen,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.message),
       ),
     );
   }

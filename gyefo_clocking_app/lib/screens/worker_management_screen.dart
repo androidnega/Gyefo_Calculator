@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/app_theme.dart';
+import '../widgets/message_composer_modal.dart';
+import '../screens/admin_message_log_screen.dart';
 
 class WorkerManagementScreen extends StatefulWidget {
   const WorkerManagementScreen({super.key});
@@ -13,23 +15,14 @@ class WorkerManagementScreen extends StatefulWidget {
 class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchTerm = '';
-  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return Scaffold(      appBar: AppBar(
         title: const Text('Worker Management'),
         backgroundColor: AppTheme.primaryGreen,
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.message),
-            onPressed: () => _showBulkMessageDialog(),
-            tooltip: 'Send Bulk Message',
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -139,15 +132,9 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
                       },
                     );
                   },
-                ),
-              ),
+                ),              ),
             ],
           ),
-          if (_isLoading)
-            Container(
-              color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(child: CircularProgressIndicator()),
-            ),
         ],
       ),
     );
@@ -218,14 +205,23 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
           onSelected:
               (value) => _handleWorkerAction(value, workerId, workerData),
           itemBuilder:
-              (context) => [
-                const PopupMenuItem(
+              (context) => [                const PopupMenuItem(
                   value: 'message',
                   child: Row(
                     children: [
                       Icon(Icons.message, size: 20),
                       SizedBox(width: 8),
                       Text('Send Message'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'viewMessages',
+                  child: Row(
+                    children: [
+                      Icon(Icons.message_outlined, size: 20),
+                      SizedBox(width: 8),
+                      Text('View Message Log'),
                     ],
                   ),
                 ),
@@ -301,10 +297,12 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
     String action,
     String workerId,
     Map<String, dynamic> workerData,
-  ) {
-    switch (action) {
+  ) {    switch (action) {
       case 'message':
         _showSingleMessageDialog(workerId, workerData['name']);
+        break;
+      case 'viewMessages':
+        _viewWorkerMessages(workerId, workerData['name']);
         break;
       case 'resetPassword':
         _resetWorkerPassword(workerId, workerData['email']);
@@ -320,152 +318,27 @@ class _WorkerManagementScreenState extends State<WorkerManagementScreen> {
         _deleteWorker(workerId, workerData['name']);
         break;
     }
-  }
-
-  void _showSingleMessageDialog(String workerId, String workerName) {
-    final messageController = TextEditingController();
-
+  }  void _showSingleMessageDialog(String workerId, String workerName) {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('Send Message to $workerName'),
-            content: TextField(
-              controller: messageController,
-              maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Enter your message...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed:
-                    () => _sendMessage([workerId], messageController.text),
-                child: const Text('Send'),
-              ),
-            ],
-          ),
+      builder: (context) => MessageComposerModal(
+        preselectedWorkerId: workerId,
+        preselectedWorkerName: workerName,
+      ),
     );
   }
 
-  void _showBulkMessageDialog() {
-    final messageController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Send Bulk Message'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('This message will be sent to all active workers.'),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: messageController,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your message...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => _sendBulkMessage(messageController.text),
-                child: const Text('Send to All'),
-              ),
-            ],
-          ),
+  void _viewWorkerMessages(String workerId, String workerName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AdminMessageLogScreen(
+          userId: workerId,
+          userName: workerName,
+        ),
+      ),
     );
   }
-
-  Future<void> _sendMessage(List<String> workerIds, String message) async {
-    if (message.trim().isEmpty) return;
-
-    Navigator.pop(context);
-    setState(() => _isLoading = true);
-
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-
-      for (String workerId in workerIds) {
-        final messageRef =
-            FirebaseFirestore.instance.collection('messages').doc();
-        batch.set(messageRef, {
-          'senderId': FirebaseAuth.instance.currentUser?.uid,
-          'senderName': 'Manager',
-          'recipientId': workerId,
-          'message': message,
-          'timestamp': FieldValue.serverTimestamp(),
-          'read': false,
-          'type': 'manager_message',
-        });
-      }
-      await batch.commit();
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Message sent successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error sending message: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _sendBulkMessage(String message) async {
-    if (message.trim().isEmpty) return;
-
-    Navigator.pop(context);
-    setState(() => _isLoading = true);
-
-    try {
-      // Get all active workers
-      final workersSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .where('role', isEqualTo: 'worker')
-              .where('isActive', isEqualTo: true)
-              .get();
-      final workerIds = workersSnapshot.docs.map((doc) => doc.id).toList();
-      await _sendMessage(workerIds, message);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error sending bulk message: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _resetWorkerPassword(String workerId, String email) async {
     showDialog(
       context: context,

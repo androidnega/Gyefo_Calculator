@@ -7,6 +7,8 @@ import 'package:gyefo_clocking_app/services/offline_sync_service.dart';
 import 'package:gyefo_clocking_app/screens/worker_attendance_detail_screen.dart';
 import 'package:gyefo_clocking_app/screens/worker_flagged_records_screen.dart';
 import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
+import 'package:gyefo_clocking_app/screens/messages_screen.dart';
+import 'package:gyefo_clocking_app/services/message_service.dart';
 
 class ModernWorkerDashboard extends StatefulWidget {
   final OfflineSyncService? offlineSyncService;
@@ -21,6 +23,7 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _pulseController;
+  late TabController _tabController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _pulseAnimation;
 
@@ -29,11 +32,11 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
   String? _todayShift;
   DateTime? _lastClockTime;
   String _workerName = '';
-
   @override
   void initState() {
     super.initState();
     _setupAnimations();
+    _tabController = TabController(length: 2, vsync: this);
     _loadWorkerData();
     _startAnimations();
   }
@@ -63,11 +66,11 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
   void _startAnimations() {
     _fadeController.forward();
   }
-
   @override
   void dispose() {
     _fadeController.dispose();
     _pulseController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -555,8 +558,48 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
             fontWeight: FontWeight.bold,
             color: AppTheme.textDark,
           ),
-        ),
-        actions: [
+        ),        actions: [
+          StreamBuilder<int>(
+            stream: MessageService.getUnreadMessageCount(),
+            builder: (context, snapshot) {
+              final unreadCount = snapshot.data ?? 0;
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      _tabController.animateTo(1);
+                    },
+                    icon: const Icon(Icons.message, color: AppTheme.textDark),
+                  ),
+                  if (unreadCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          unreadCount > 99 ? '99+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
           NotificationBell(
             managerId: FirebaseAuth.instance.currentUser?.uid ?? '',
           ),
@@ -587,32 +630,49 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
           ),
           const SizedBox(width: 16),
         ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Header
-            _buildWelcomeHeader(),
-            const SizedBox(height: 32),
-
-            // Clock Button
-            Center(child: _buildClockButton()),
-            const SizedBox(height: 32),
-
-            // Status Card
-            _buildStatusCard(),
-            const SizedBox(height: 16),
-
-            // Shift Card
-            _buildShiftCard(),
-            const SizedBox(height: 24),
-
-            // Quick Actions
-            _buildQuickActions(),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: AppTheme.primaryGreen,
+          labelColor: AppTheme.primaryGreen,
+          unselectedLabelColor: AppTheme.textDark.withValues(alpha: 0.6),
+          tabs: const [
+            Tab(text: 'Dashboard', icon: Icon(Icons.dashboard)),
+            Tab(text: 'Messages', icon: Icon(Icons.message)),
           ],
         ),
+      ),      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // Dashboard Tab
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Welcome Header
+                _buildWelcomeHeader(),
+                const SizedBox(height: 32),
+
+                // Clock Button
+                Center(child: _buildClockButton()),
+                const SizedBox(height: 32),
+
+                // Status Card
+                _buildStatusCard(),
+                const SizedBox(height: 16),
+
+                // Shift Card
+                _buildShiftCard(),
+                const SizedBox(height: 24),
+
+                // Quick Actions
+                _buildQuickActions(),
+              ],
+            ),
+          ),
+          // Messages Tab
+          const MessagesScreen(),
+        ],
       ),
     );
   }
