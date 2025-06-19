@@ -9,6 +9,8 @@ import 'package:gyefo_clocking_app/widgets/notification_bell.dart';
 import 'package:gyefo_clocking_app/screens/messages_screen.dart';
 import 'package:gyefo_clocking_app/services/message_service.dart';
 import 'package:gyefo_clocking_app/mixins/session_aware_mixin.dart';
+import 'package:gyefo_clocking_app/widgets/live_time_widget.dart';
+import 'package:gyefo_clocking_app/services/shift_enforcement_service.dart';
 
 class ModernWorkerDashboard extends StatefulWidget {
   final OfflineSyncService? offlineSyncService;
@@ -26,17 +28,17 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
   late TabController _tabController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _pulseAnimation;
-
   bool _isClockedIn = false;
   bool _isLoading = false;
   String? _todayShift;
   DateTime? _lastClockTime;
   String _workerName = '';
-  @override
+  late ShiftEnforcementService _shiftEnforcementService;  @override
   void initState() {
     super.initState();
     _setupAnimations();
     _tabController = TabController(length: 2, vsync: this);
+    _shiftEnforcementService = ShiftEnforcementService();
     _loadWorkerData();
     _startAnimations();
   }
@@ -212,13 +214,31 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
       },
     );
   }
-
   Future<void> _handleClockAction() async {
     setState(() => _isLoading = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
+      if (user == null) return;      // Check shift enforcement before allowing clock action
+      final canClock = await _shiftEnforcementService.canPerformClockAction(
+        workerId: user.uid,
+        action: _isClockedIn ? ClockAction.clockOut : ClockAction.clockIn,
+      );
+        if (!canClock.isAllowed) {
+        // Show warning message and block the action
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(canClock.denialReason ?? 'You\'re not within your scheduled shift time.'),
+              backgroundColor: AppTheme.errorRed,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
 
       final attendanceService = AttendanceService();
 
@@ -658,10 +678,13 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
             SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                crossAxisAlignment: CrossAxisAlignment.start,                children: [
                   // Welcome Header
                   _buildWelcomeHeader(),
+                  const SizedBox(height: 16),
+
+                  // Live Time Display
+                  const Center(child: LiveTimeWidget()),
                   const SizedBox(height: 32),
 
                   // Clock Button
