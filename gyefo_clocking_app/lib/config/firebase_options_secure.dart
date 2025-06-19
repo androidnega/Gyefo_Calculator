@@ -1,7 +1,8 @@
 // SECURE Firebase Options - Uses Environment Variables
 // This file replaces the original firebase_options.dart with secure environment-based configuration
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import '../config/env_config.dart';
 
 /// Secure [FirebaseOptions] that uses environment variables instead of hardcoded values
