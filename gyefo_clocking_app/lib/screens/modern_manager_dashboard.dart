@@ -327,11 +327,8 @@ class _ModernManagerDashboardState extends State<ModernManagerDashboard>
     final isSmallScreen = screenWidth <= 400;
     final padding = isSmallScreen ? 12.0 : 16.0;
     final spacingLarge = isSmallScreen ? 16.0 : 24.0;
-    final spacingSmall = isSmallScreen ? 8.0 : 12.0;
-
-    return GestureDetector(
+    final spacingSmall = isSmallScreen ? 8.0 : 12.0;    return GestureDetector(
       onTap: extendSession,
-      onPanUpdate: (_) => extendSession(),
       onScaleUpdate: (_) => extendSession(),
       child: Scaffold(
         backgroundColor: AppTheme.lightGrey,

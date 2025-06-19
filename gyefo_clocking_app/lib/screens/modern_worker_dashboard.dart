@@ -642,10 +642,8 @@ class _ModernWorkerDashboardState extends State<ModernWorkerDashboard>
   }
 
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
+  Widget build(BuildContext context) {    return GestureDetector(
       onTap: extendSession,
-      onPanUpdate: (_) => extendSession(),
       onScaleUpdate: (_) => extendSession(),
       child: Scaffold(
         backgroundColor: AppTheme.lightGrey,
